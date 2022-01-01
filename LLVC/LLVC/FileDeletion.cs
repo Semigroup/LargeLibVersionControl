@@ -8,5 +8,11 @@ namespace LLVC
 {
     public class FileDeletion : FileUpdate
     {
+
+        public FileDeletion(FileEntry File)
+        : base(File, Type.Deletion)
+        {
+
+        }
     }
 }

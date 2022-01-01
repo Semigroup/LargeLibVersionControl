@@ -9,5 +9,11 @@ namespace LLVC
     public class FileMovement : FileUpdate
     {
         public string OldRelativePath { get; set; }
+
+        public FileMovement(FileEntry File) 
+            : base(File, Type.Movement)
+        {
+
+        }
     }
 }

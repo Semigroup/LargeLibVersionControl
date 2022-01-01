@@ -8,6 +8,21 @@ namespace LLVC
 {
    public abstract class FileUpdate
     {
-        public FileEntry File { get; set; }
+        public enum Type
+        {
+            Addition = 1,
+            Change = 2,
+            Movement = 4,
+            Deletion = 8
+        }
+
+        public FileEntry File { get; private set; }
+        public Type MyType { get; private set; }
+
+        public FileUpdate(FileEntry File, Type MyType)
+        {
+            this.File = File;
+            this.MyType = MyType;
+        }
     }
 }

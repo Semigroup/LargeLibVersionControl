@@ -8,6 +8,12 @@ namespace LLVC
 {
     public class FileChange : FileUpdate
     {
-        public byte[] OldHash { get; set; }
+        public HashValue OldFileHash { get; set; }
+
+        public FileChange(FileEntry File)
+          : base(File, Type.Change)
+        {
+
+        }
     }
 }

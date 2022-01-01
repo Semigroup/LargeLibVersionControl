@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CmdLineTool.cs" />
     <Compile Include="Commit.cs" />
     <Compile Include="FileMovement.cs" />
     <Compile Include="FileChange.cs" />
@@ -50,8 +51,16 @@
     <Compile Include="FileAddition.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FileUpdate.cs" />
+    <Compile Include="HashValue.cs" />
     <Compile Include="Index.cs" />
+    <Compile Include="Init.cs" />
     <Compile Include="LibraryController.cs" />
+    <Compile Include="Markdown\Attribute.cs" />
+    <Compile Include="Markdown\MDElement.cs" />
+    <Compile Include="Markdown\MDHelper.cs" />
+    <Compile Include="Markdown\MDList.cs" />
+    <Compile Include="Markdown\MDParser.cs" />
+    <Compile Include="Markdown\Section.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

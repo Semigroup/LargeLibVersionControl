@@ -8,5 +8,10 @@ namespace LLVC
 {
     public class FileAddition : FileUpdate
     {
+        public FileAddition(FileEntry File)
+           : base(File, Type.Addition)
+        {
+
+        }
     }
 }
