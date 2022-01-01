@@ -45,10 +45,6 @@
   <ItemGroup>
     <Compile Include="CmdLineTool.cs" />
     <Compile Include="Commit.cs" />
-    <Compile Include="FileMovement.cs" />
-    <Compile Include="FileChange.cs" />
-    <Compile Include="FileDeletion.cs" />
-    <Compile Include="FileAddition.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FileUpdate.cs" />
     <Compile Include="HashValue.cs" />

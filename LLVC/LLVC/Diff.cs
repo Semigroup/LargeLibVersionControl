@@ -6,13 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-    public class FileDeletion : FileUpdate
+    class Diff
     {
-
-        public FileDeletion(FileEntry File)
-        : base(File, Type.Deletion)
-        {
-
-        }
     }
 }

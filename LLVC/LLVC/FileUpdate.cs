@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-   public abstract class FileUpdate
+   public class FileUpdate
     {
         public enum Type
         {
