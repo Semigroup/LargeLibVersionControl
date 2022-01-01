@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-    class Diff
+   public class Diff
     {
+        public IList<FileUpdate> FileUpdates { get; set; }
+
     }
 }

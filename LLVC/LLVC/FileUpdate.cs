@@ -10,10 +10,8 @@ namespace LLVC
     {
         public enum Type
         {
-            Addition = 1,
+            Deletion = 1,
             Change = 2,
-            Movement = 4,
-            Deletion = 8
         }
 
         public FileEntry File { get; private set; }

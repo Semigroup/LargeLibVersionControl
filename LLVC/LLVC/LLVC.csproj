@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="CmdLineTool.cs" />
     <Compile Include="Commit.cs" />
+    <Compile Include="Diff.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FileUpdate.cs" />
     <Compile Include="HashValue.cs" />
