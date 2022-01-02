@@ -13,8 +13,9 @@ namespace LLVC
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
         /// init [path] : macht an ort eine neue library, falls nicht bereits vorhanden und fragt nach titel
-        /// commit : commited changes und fragt nach titel
-        /// (kritische zeichen aus titel entfernen: \n \r #)
+        /// commit : commited changes und fragt nach titel und message
+        /// get : gibt aktuelle Änderungen an
+        /// 
         /// 
         /// compareTo [path]
         /// sync : nach compareTo

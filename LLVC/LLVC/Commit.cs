@@ -9,7 +9,8 @@ namespace LLVC
     public class Commit : IComparable<Commit>
     {
         public HashValue Hash { get; private set; }
-        public string Name { get; private set; }
+        public string Title { get; private set; }
+        public string Message { get; private set; }
         public int Number { get; private set; }
         public DateTime TimeStamp { get; private set; }
 

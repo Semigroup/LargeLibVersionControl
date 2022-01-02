@@ -10,6 +10,11 @@ namespace LLVC
     {
         public byte[] Bytes { get; private set; }
 
+        public HashValue(byte[] Bytes)
+        {
+            this.Bytes = Bytes;
+        }
+
         public string GetBase64()
         {
             return "=" + Convert.ToBase64String(Bytes, Base64FormattingOptions.None) + "=";
