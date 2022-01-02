@@ -51,12 +51,6 @@
     <Compile Include="HashValue.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="LibraryController.cs" />
-    <Compile Include="Markdown\Attribute.cs" />
-    <Compile Include="Markdown\MDElement.cs" />
-    <Compile Include="Markdown\MDHelper.cs" />
-    <Compile Include="Markdown\MDList.cs" />
-    <Compile Include="Markdown\MDParser.cs" />
-    <Compile Include="Markdown\Section.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />

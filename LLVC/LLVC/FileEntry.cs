@@ -9,8 +9,13 @@ namespace LLVC
 {
    public class FileEntry
     {
-        public string RelativePath { get; private set; }
-        public HashValue FileHash { get; private set; }
+        public string RelativePath { get;  set; }
+        public HashValue FileHash { get;  set; }
+
+        private FileEntry()
+        {
+
+        }
 
         public FileEntry(string RelativePath, HashValue FileHash)
         {

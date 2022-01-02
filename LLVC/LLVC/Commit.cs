@@ -8,13 +8,18 @@ namespace LLVC
 {
     public class Commit : IComparable<Commit>
     {
-        public HashValue Hash { get; private set; }
-        public string Title { get; private set; }
-        public string Message { get; private set; }
-        public int Number { get; private set; }
-        public DateTime TimeStamp { get; private set; }
+        public HashValue Hash { get;  set; }
+        public string Title { get;  set; }
+        public string Message { get;  set; }
+        public int Number { get;  set; }
+        public DateTime TimeStamp { get;  set; }
 
         public Diff Diff { get; set; }
+
+        private Commit()
+        {
+
+        }
 
         public int CompareTo(Commit other)
         {

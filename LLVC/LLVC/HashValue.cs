@@ -8,7 +8,12 @@ namespace LLVC
 {
     public class HashValue
     {
-        public byte[] Bytes { get; private set; }
+        public byte[] Bytes { get; set; }
+
+        private HashValue()
+        {
+
+        }
 
         public HashValue(byte[] Bytes)
         {

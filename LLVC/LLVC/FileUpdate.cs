@@ -15,8 +15,13 @@ namespace LLVC
             Change = 2,
         }
 
-        public FileEntry File { get; private set; }
-        public Type MyType { get; private set; }
+        public FileEntry File { get;  set; }
+        public Type MyType { get;  set; }
+
+        private FileUpdate()
+        {
+
+        }
 
         public FileUpdate(FileEntry File, Type MyType)
         {

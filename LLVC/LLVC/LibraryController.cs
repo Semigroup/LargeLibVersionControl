@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Security.Cryptography;
+using System.Runtime.Serialization;
 
 namespace LLVC
 {
@@ -16,7 +17,7 @@ namespace LLVC
         public string PathToLLVC { get; private set; }
 
         public Protocol Protocol { get; private set; }
-        public Index FileIndex { get; private set; }
+        public Index ProtocolIndex { get; private set; }
 
         public SHA256 SHA256 { get; private set; }
         public XmlSerializer Serializer { get; set; }
@@ -30,7 +31,7 @@ namespace LLVC
             if (!Directory.Exists(PathToLibrary))
                 throw new DirectoryNotFoundException(PathToLibrary + " does not exist!");
 
-            this.PathToLLVC = Path.Combine(PathToLibrary, "/.llvc/");
+            this.PathToLLVC = Path.Combine(PathToLibrary, ".llvc");
             if (!Directory.Exists(PathToLLVC))
                 throw new DirectoryNotFoundException(PathToLLVC + " does not exist!");
 
@@ -39,8 +40,16 @@ namespace LLVC
                 throw new FileNotFoundException(protocolFile + " does not exist!");
 
             this.Protocol = (Protocol)Serializer.Deserialize(File.OpenRead(protocolFile));
-            if (this.Protocol.Check(SHA256))
-                throw new InvalidDataException("library.protocol is not correct!");
+            int number = this.Protocol.CheckNumbering();
+            if (number != -1)
+                throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
+
+            Commit commit = this.Protocol.CheckHashes(SHA256);
+            if (commit != null)
+                throw new InvalidDataException("library.protocol is not correct!\n" +
+                    "Commit " + commit.Number + ", " + commit.Title + ", has a broken value hash.");
+
+            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
         }
 
         public Index ComputeIndex(string pathToRoot)

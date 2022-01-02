@@ -8,9 +8,9 @@ namespace LLVC
 {
     public class Index
     {
-        public IDictionary<string, FileEntry> FileEntries { get; private set; }
+        public SortedDictionary<string, FileEntry> FileEntries { get; private set; }
 
-        public Index(IDictionary<string, FileEntry> FileEntries)
+        public Index(SortedDictionary<string, FileEntry> FileEntries)
         {
             this.FileEntries = FileEntries;
         }

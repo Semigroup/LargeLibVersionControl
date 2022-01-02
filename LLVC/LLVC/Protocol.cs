@@ -9,45 +9,44 @@ namespace LLVC
 {
    public class Protocol
     {
-        public HashValue InitialHash { get; private set; }
-        public string LibraryName { get; private set; }
-        public IList<Commit> Commits { get; private set; }
-        public Index Index { get; private set; }
+        public HashValue InitialHash { get; set; }
+        public string LibraryName { get; set; }
+        public List<Commit> Commits { get; set; }
+
+        private Protocol()
+        {
+
+        }
 
         public Protocol(string LibraryName, HashValue InitialHash)
         {
             this.LibraryName = LibraryName;
             this.InitialHash = InitialHash;
             this.Commits = new List<Commit>();
-            this.Index = new Index();
         }
 
-        public bool Check(SHA256 SHA256)
+        public int CheckNumbering()
         {
             int i = 0;
             foreach (var c in Commits)
-                if (c.Number == i)
-                    return false;
+                if (c.Number != i)
+                    return i;
+                else
+                    i++;
+            return -1;
+        }
 
-            Index index = new Index(this.Commits.Select(c => c.Diff));
-            if (!index.Equals(this.Index))
-                return false;
-
+        public Commit CheckHashes(SHA256 SHA256)
+        {
             HashValue currentHash = InitialHash;
             foreach (var c in Commits)
             {
                 byte[] concat = currentHash * c.Diff.ComputeHash(SHA256);
                 if (new HashValue(SHA256.ComputeHash(concat)) != c.Hash)
-                    return false;
+                    return c;
                 currentHash = c.Hash;
             }
-            return true;
-        }
-
-        public void AddCommit(Commit commit)
-        {
-            this.Commits.Add(commit);
-            this.Index.Apply(commit.Diff);
+            return null;
         }
     }
 }

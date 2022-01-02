@@ -9,7 +9,12 @@ namespace LLVC
 {
     public class Diff
     {
-        public IList<FileUpdate> FileUpdates { get; set; }
+        public List<FileUpdate> FileUpdates { get; set; }
+
+        private Diff()
+        {
+
+        }
 
         public Diff(Index oldIndex, Index newIndex)
         {

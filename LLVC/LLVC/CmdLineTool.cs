@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace LLVC
 {
     public class CmdLineTool
     {
         public LibraryController Controller { get; set; }
+        public SHA256 SHA256 { get; set; } = SHA256.Create();
 
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
@@ -30,30 +32,58 @@ namespace LLVC
         {
             while (true)
             {
+                if (Controller == null)
+                    Console.Write("[null]: ");
+                else
+                    Console.Write("[" + Controller.Protocol.LibraryName + "]: ");
+
                 string line = Console.ReadLine();
-                var words = Split(line);
-                foreach (var word in words)
-                    Console.WriteLine(word);
+                List<string> words = null;
+                try
+                {
+                    words = Split(line);
+                }
+                catch (ArgumentException)
+                {
+                    Console.WriteLine("Couldnt parse " + line);
+                    Console.WriteLine("You need to close the quotation marks!");
+                    continue;
+                }
 
+                if (words.Count == 0)
+                    continue;
 
-                //if (Controller == null)
-                //    Console.Write("null: ");
-                //else
-                //    Console.Write(Controller.PathToLibrary + ": ");
+                switch (words[0].ToLower())
+                {
+                    case "help":
+                        Console.WriteLine("ToDo");
+                        break;
 
-                //string line = Console.ReadLine();
+                    case "init":
+                        if (words.Count != 2)
+                            Console.WriteLine("Init needs to be followed by a path.");
+                        else
+                            Init(words[1]);
+                        break;
 
-                //var words = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                //if (words.Length > 0)
-                //    switch (words[0])
-                //    {
-                //        case "Init":
-                //            if (words.Length != 2)
-                //                Console.WriteLine("Init needs to be followed by a path.");
-                //            break;
-                //        default:
-                //            break;
-                //    }
+                    case "select":
+                        if (words.Count != 2)
+                            Console.WriteLine("Select needs to be followed by a path.");
+                        else
+                            Select(words[1]);
+                        break;
+
+                    case "get":
+                        if (words.Count != 1)
+                            Console.WriteLine("Get may not have any arguments.");
+                        else
+                            Get();
+                        break;
+
+                    default:
+                        Console.WriteLine("Couldnt parse " + line);
+                        break;
+                }
             }
         }
 
@@ -63,8 +93,17 @@ namespace LLVC
             int start = 0;
             int length = 0;
             bool encapsulated = false;
-            for (int i = 0; i < line.Length; i++)
+
+            void addCurrent()
             {
+                if (length > 0 && start < line.Length)
+                {
+                    words.Add(line.Substring(start, length));
+                    length = 0;
+                }
+            }
+
+            for (int i = 0; i < line.Length; i++)
                 switch (line[i])
                 {
                     case ' ':
@@ -72,20 +111,12 @@ namespace LLVC
                             length++;
                         else
                         {
-                            if (length > 0)
-                            {
-                                words.Add(line.Substring(start, length));
-                                length = 0;
-                            }
+                            addCurrent();
                             start = i + 1;
                         }
                         break;
                     case '\"':
-                        if (length > 0)
-                        {
-                            words.Add(line.Substring(start, length));
-                            length = 0;
-                        }
+                        addCurrent();
                         start = i + 1;
 
                         encapsulated = !encapsulated;
@@ -94,7 +125,10 @@ namespace LLVC
                         length++;
                         break;
                 }
-            }
+            addCurrent();
+
+            if (encapsulated)
+                throw new ArgumentException("Quote Marks not closed!");
 
             return words;
         }
@@ -113,7 +147,21 @@ namespace LLVC
         }
         public void Init(string path)
         {
+            Console.WriteLine("Creating a new library at " + path + ".");
+            Console.WriteLine("Enter a name for the Library:");
+            var name = Console.ReadLine();
+            var initialHash = new HashValue(SHA256.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks)));
 
+            try
+            {
+                LibraryController.Create(path, name, initialHash);
+                Controller = new LibraryController(path);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Controller = null;
+            }
         }
         public void Get()
         {
