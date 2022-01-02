@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace LLVC
 {
@@ -19,9 +20,28 @@ namespace LLVC
             this.InitialHash = InitialHash;
             this.Commits = new List<Commit>();
             this.Index = new Index();
+        }
 
-            //check correctness of hash chain
-            //check correctness of index
+        public bool Check(SHA256 SHA256)
+        {
+            int i = 0;
+            foreach (var c in Commits)
+                if (c.Number == i)
+                    return false;
+
+            Index index = new Index(this.Commits.Select(c => c.Diff));
+            if (!index.Equals(this.Index))
+                return false;
+
+            HashValue currentHash = InitialHash;
+            foreach (var c in Commits)
+            {
+                byte[] concat = currentHash * c.Diff.ComputeHash(SHA256);
+                if (new HashValue(SHA256.ComputeHash(concat)) != c.Hash)
+                    return false;
+                currentHash = c.Hash;
+            }
+            return true;
         }
 
         public void AddCommit(Commit commit)

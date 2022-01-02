@@ -41,7 +41,29 @@ namespace LLVC
 
             return true;
         }
+
         public static bool operator !=(HashValue h1, HashValue h2) => !(h1 == h2);
+
+        public static HashValue operator +(HashValue h1, HashValue h2)
+        {
+            if (h1 == null)
+                return h2;
+            if (h2 == null)
+                return h1;
+
+            byte[] xored = new byte[h1.Bytes.Length];
+            for (int i = 0; i < xored.Length; i++)
+                xored[i] = (byte)(h1.Bytes[i] ^ h2.Bytes[i]);
+            return new HashValue(xored);
+        }
+
+        public static byte[] operator *(HashValue h1, HashValue h2)
+        {
+            byte[] concatenation = new byte[h1.Bytes.Length + h2.Bytes.Length];
+            h1.Bytes.CopyTo(concatenation, 0);
+            h2.Bytes.CopyTo(concatenation, h1.Bytes.Length);
+            return concatenation;
+        }
 
 
         public override bool Equals(object obj)

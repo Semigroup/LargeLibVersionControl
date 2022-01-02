@@ -39,7 +39,8 @@ namespace LLVC
                 throw new FileNotFoundException(protocolFile + " does not exist!");
 
             this.Protocol = (Protocol)Serializer.Deserialize(File.OpenRead(protocolFile));
-            //check protocol correctness
+            if (this.Protocol.Check(SHA256))
+                throw new InvalidDataException("library.protocol is not correct!");
         }
 
         public Index ComputeIndex(string pathToRoot)

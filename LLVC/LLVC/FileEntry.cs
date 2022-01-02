@@ -17,5 +17,17 @@ namespace LLVC
             this.RelativePath = RelativePath;
             this.FileHash = FileHash;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is FileEntry entry))
+                return false;
+            return (this.RelativePath == entry.RelativePath) && (this.FileHash == entry.FileHash);
+        }
+
+        public override int GetHashCode()
+        {
+            return RelativePath.GetHashCode() + FileHash.GetHashCode();
+        }
     }
 }

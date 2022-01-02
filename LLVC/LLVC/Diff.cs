@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace LLVC
 {
     public class Diff
     {
         public IList<FileUpdate> FileUpdates { get; set; }
-
 
         public Diff(Index oldIndex, Index newIndex)
         {
@@ -28,10 +28,17 @@ namespace LLVC
                     FileUpdates.Add(new FileUpdate(oldIndex.FileEntries[file], FileUpdate.Type.Deletion));
             }
             foreach (var file in newIndex.FileEntries.Keys)
-            {
                 if (!oldIndex.FileEntries.ContainsKey(file))
                     FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
-            }
+        }
+
+        public HashValue ComputeHash(SHA256 SHA256)
+        {
+            //we assume here there is at least one File Update
+            HashValue h = null;
+            foreach (var item in FileUpdates)
+                h += item.GetHash(SHA256);
+            return h;
         }
     }
 }
