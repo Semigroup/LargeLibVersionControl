@@ -19,6 +19,11 @@ namespace LLVC
 
         }
 
+        public HashValue this[string relativeFilePath]
+        {
+            get => FileEntries[relativeFilePath].FileHash;
+        }
+
         public void Apply(Diff diff)
         {
             foreach (var update in diff.FileUpdates)

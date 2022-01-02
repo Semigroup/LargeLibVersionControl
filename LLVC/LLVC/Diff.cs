@@ -6,9 +6,32 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-   public class Diff
+    public class Diff
     {
         public IList<FileUpdate> FileUpdates { get; set; }
 
+
+        public Diff(Index oldIndex, Index newIndex)
+        {
+            FileUpdates = new List<FileUpdate>();
+
+            foreach (var file in oldIndex.FileEntries.Keys)
+            {
+                var oldHash = oldIndex[file];
+                if (newIndex.FileEntries.ContainsKey(file))
+                {
+                    var newHash = newIndex[file];
+                    if (oldHash != newHash)
+                        FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
+                }
+                else
+                    FileUpdates.Add(new FileUpdate(oldIndex.FileEntries[file], FileUpdate.Type.Deletion));
+            }
+            foreach (var file in newIndex.FileEntries.Keys)
+            {
+                if (!oldIndex.FileEntries.ContainsKey(file))
+                    FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
+            }
+        }
     }
 }

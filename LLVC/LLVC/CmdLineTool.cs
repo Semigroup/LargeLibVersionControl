@@ -18,7 +18,8 @@ namespace LLVC
         /// 
         /// 
         /// compareTo [path]
-        /// sync : nach compareTo
+        /// sync : nach compareTo, geht nur, wenn keine uncommitted changes auf dem remote sind
+        /// forceSync: geht direkt nach file-indices
         /// 
         /// removeEmptyFolders
         /// replaceWhiteSpaces
