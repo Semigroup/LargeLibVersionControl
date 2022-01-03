@@ -39,12 +39,12 @@ namespace LLVC
                     FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
         }
 
-        public HashValue ComputeHash(SHA256 SHA256)
+        public HashValue ComputeHash(HashAlgorithm HashAlgorithm)
         {
             //we assume here there is at least one File Update
             HashValue h = null;
             foreach (var item in FileUpdates)
-                h += item.GetHash(SHA256);
+                h += item.GetHash(HashAlgorithm);
             return h;
         }
     }

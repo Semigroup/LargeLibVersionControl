@@ -20,12 +20,12 @@ namespace LLVC
         public Protocol Protocol { get; private set; }
         public Index ProtocolIndex { get; private set; }
 
-        public SHA256 SHA256 { get; private set; }
+        public HashAlgorithm HashAlgorithm { get; private set; }
         public XmlSerializer Serializer { get; set; }
 
         public LibraryController(string PathToLibrary)
         {
-            this.SHA256 = SHA256.Create();
+            this.HashAlgorithm = MD5.Create();
             this.Serializer = new XmlSerializer(typeof(Protocol));
 
             this.PathToLibrary = PathToLibrary;
@@ -59,7 +59,7 @@ namespace LLVC
                 hash = this.Protocol.InitialHash;
                 number = 0;
             }
-            hash = Protocol.Concat(SHA256, hash, diff.ComputeHash(SHA256));
+            hash = Protocol.Concat(HashAlgorithm, hash, diff.ComputeHash(HashAlgorithm));
 
             Commit c = new Commit(number, title, message, timeStamp, hash, diff);
             Protocol.Commits.Add(c);
@@ -82,7 +82,7 @@ namespace LLVC
             if (number != -1)
                 throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
 
-            Commit commit = this.Protocol.CheckHashes(SHA256);
+            Commit commit = this.Protocol.CheckHashes(HashAlgorithm);
             if (commit != null)
                 throw new InvalidDataException("library.protocol is not correct!\n" +
                     "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
@@ -172,7 +172,7 @@ namespace LLVC
             using (FileStream fileStream = new FileStream(absolutePathToFile, FileMode.Open))
             {
                 fileStream.Position = 0;
-                bytes = SHA256.ComputeHash(fileStream);
+                bytes = HashAlgorithm.ComputeHash(fileStream);
             }
             return new HashValue(bytes);
         }

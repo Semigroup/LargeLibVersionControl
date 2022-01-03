@@ -11,7 +11,7 @@ namespace LLVC
     public class CmdLineTool
     {
         public LibraryController Controller { get; set; }
-        public SHA256 SHA256 { get; set; } = SHA256.Create();
+        public HashAlgorithm HashAlgorithm { get; set; } = MD5.Create();
 
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
@@ -162,7 +162,7 @@ namespace LLVC
             Console.WriteLine("Creating a new library at " + path + ".");
             Console.WriteLine("Enter a name for the Library:");
             var name = Console.ReadLine();
-            var initialHash = new HashValue(SHA256.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks)));
+            var initialHash = new HashValue(HashAlgorithm.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks)));
 
             try
             {
