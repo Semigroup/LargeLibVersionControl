@@ -34,19 +34,29 @@ namespace LLVC
             foreach (var update in diff.FileUpdates)
             {
                 if (!FileEntries.ContainsKey(update.File.RelativePath))
-                    throw new KeyNotFoundException(update.File.RelativePath + " not found in index!");
-
-                switch (update.MyType)
-                {
-                    case FileUpdate.Type.Deletion:
-                        FileEntries.Remove(update.File.RelativePath);
-                        break;
-                    case FileUpdate.Type.Change:
-                        FileEntries[update.File.RelativePath] = update.File;
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
+                    switch (update.MyType)
+                    {
+                        case FileUpdate.Type.Deletion:
+                            throw new KeyNotFoundException(update.File.RelativePath + " cannot be removed." +
+                                " It was not found in index!");
+                        case FileUpdate.Type.Change:
+                            FileEntries.Add(update.File.RelativePath, update.File);
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                else
+                    switch (update.MyType)
+                    {
+                        case FileUpdate.Type.Deletion:
+                            FileEntries.Remove(update.File.RelativePath);
+                            break;
+                        case FileUpdate.Type.Change:
+                            FileEntries[update.File.RelativePath] = update.File;
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
             }
         }
 
@@ -70,7 +80,7 @@ namespace LLVC
                 }
                 return true;
             }
-            return subset(this.FileEntries, index.FileEntries) 
+            return subset(this.FileEntries, index.FileEntries)
                 && subset(index.FileEntries, this.FileEntries);
         }
 

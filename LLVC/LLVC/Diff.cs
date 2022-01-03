@@ -11,6 +11,8 @@ namespace LLVC
     {
         public List<FileUpdate> FileUpdates { get; set; }
 
+        public bool IsEmpty => FileUpdates.Count == 0;
+
         private Diff()
         {
 

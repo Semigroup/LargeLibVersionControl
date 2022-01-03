@@ -36,13 +36,18 @@ namespace LLVC
             return -1;
         }
 
+        public HashValue Concat(SHA256 SHA256, HashValue h1, HashValue h2)
+        {
+            byte[] concat = h1 * h2;
+            return new HashValue(SHA256.ComputeHash(concat));
+        }
+
         public Commit CheckHashes(SHA256 SHA256)
         {
             HashValue currentHash = InitialHash;
             foreach (var c in Commits)
             {
-                byte[] concat = currentHash * c.Diff.ComputeHash(SHA256);
-                if (new HashValue(SHA256.ComputeHash(concat)) != c.Hash)
+                if (Concat(SHA256, currentHash, c.Diff.ComputeHash(SHA256)) != c.Hash)
                     return c;
                 currentHash = c.Hash;
             }

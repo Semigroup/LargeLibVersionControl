@@ -8,12 +8,11 @@ namespace LLVC
 {
     public class Commit : IComparable<Commit>
     {
-        public HashValue Hash { get;  set; }
-        public string Title { get;  set; }
-        public string Message { get;  set; }
-        public int Number { get;  set; }
-        public DateTime TimeStamp { get;  set; }
-
+        public int Number { get; set; }
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public HashValue Hash { get; set; }
         public Diff Diff { get; set; }
 
         private Commit()
@@ -21,11 +20,22 @@ namespace LLVC
 
         }
 
+        public Commit(int Number, string Title, string Message, DateTime TimeStamp, HashValue Hash, Diff Diff)
+        {
+            this.Number = Number;
+            this.Title = Title;
+            this.Message = Message;
+            this.TimeStamp = TimeStamp;
+            this.Diff = Diff;
+            this.Hash = Hash;
+            this.Diff = Diff;
+        }
+
         public int CompareTo(Commit other)
         {
             return this.Number - other.Number;
         }
 
-        
+
     }
 }

@@ -18,6 +18,7 @@ namespace LLVC
         /// get : gibt aktuelle Änderungen an, danach kann commit ausgelöst werden
         /// commit : commited changes und fragt nach titel und message (nur echte changes können committed werden)
         /// 
+        /// copyTo [path]
         /// compareTo [path]
         /// sync : nach compareTo, geht nur, wenn keine uncommitted changes auf dem remote sind
         /// forceSync: geht direkt nach file-indices
@@ -32,12 +33,9 @@ namespace LLVC
         {
             while (true)
             {
-                if (Controller == null)
-                    Console.Write("[null]: ");
-                else
-                    Console.Write("[" + Controller.Protocol.LibraryName + "]: ");
-
+                WriteStatusString();
                 string line = Console.ReadLine();
+
                 List<string> words = null;
                 try
                 {
@@ -55,6 +53,14 @@ namespace LLVC
 
                 ParseCommand(line, words);
             }
+        }
+
+        public void WriteStatusString()
+        {
+            if (Controller == null)
+                Console.Write("[null]: ");
+            else
+                Console.Write("[" + Controller.Protocol.LibraryName + "]: ");
         }
 
         public void ParseCommand(string line, List<string> words)
@@ -177,6 +183,27 @@ namespace LLVC
             }
             Diff diff = Controller.GetDiff();
             ListDiff(diff);
+            if (diff.IsEmpty)
+                return;
+
+            Console.WriteLine("Enter Commit to commit those changes:");
+            WriteStatusString();
+            string line = Console.ReadLine();
+            var words = Split(line);
+
+            if (words.Count != 1 && words[0].ToLower() != "commit")
+            {
+                ParseCommand(line, words);
+                return;
+            }
+
+            Console.WriteLine("Enter a Title for the Commit:");
+            string title = Console.ReadLine();
+
+            Console.WriteLine("Enter a Message for the Commit:");
+            string message = Console.ReadLine();
+
+            Controller.Commit(title, message, DateTime.Now, diff);
         }
         public void ListDiff(Diff diff)
         {

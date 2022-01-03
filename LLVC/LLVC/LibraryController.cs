@@ -15,6 +15,7 @@ namespace LLVC
     {
         public string PathToLibrary { get; private set; }
         public string PathToLLVC { get; private set; }
+        public string PathToProtocolFile { get; private set; }
 
         public Protocol Protocol { get; private set; }
         public Index ProtocolIndex { get; private set; }
@@ -35,11 +36,48 @@ namespace LLVC
             if (!Directory.Exists(PathToLLVC))
                 throw new DirectoryNotFoundException(PathToLLVC + " does not exist!");
 
-            string protocolFile = Path.Combine(PathToLLVC, "library.protocol");
-            if (!File.Exists(protocolFile))
-                throw new FileNotFoundException(protocolFile + " does not exist!");
+            this.PathToProtocolFile = Path.Combine(PathToLLVC, "library.protocol");
+            if (!File.Exists(PathToProtocolFile))
+                throw new FileNotFoundException(PathToProtocolFile + " does not exist!");
+            ReadProtocol();
 
-            this.Protocol = (Protocol)Serializer.Deserialize(File.OpenRead(protocolFile));
+            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
+        }
+
+        public void Commit(string title, string message, DateTime timeStamp, Diff diff)
+        {
+            int number;
+            HashValue hash;
+            if (this.Protocol.Commits.Count > 0)
+            {
+                Commit lastCommit = this.Protocol.Commits.Last();
+                hash = lastCommit.Hash;
+                number = lastCommit.Number + 1;
+            }
+            else
+            {
+                hash = this.Protocol.InitialHash;
+                number = 0;
+            }
+            hash = Protocol.Concat(SHA256, hash, diff.ComputeHash(SHA256));
+
+            Commit c = new Commit(number, title, message, timeStamp, hash, diff);
+            Protocol.Commits.Add(c);
+            this.ProtocolIndex.Apply(diff);
+
+            SaveProtocol();
+        }
+
+        public void SaveProtocol()
+        {
+            using (var openStream = File.OpenWrite(PathToProtocolFile))
+                Serializer.Serialize(openStream, this.Protocol);
+        }
+        public void ReadProtocol()
+        {
+            using (var openStream = File.OpenRead(PathToProtocolFile))
+                this.Protocol = (Protocol)Serializer.Deserialize(openStream);
+
             int number = this.Protocol.CheckNumbering();
             if (number != -1)
                 throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
@@ -47,11 +85,8 @@ namespace LLVC
             Commit commit = this.Protocol.CheckHashes(SHA256);
             if (commit != null)
                 throw new InvalidDataException("library.protocol is not correct!\n" +
-                    "Commit " + commit.Number + ", " + commit.Title + ", has a broken value hash.");
-
-            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
+                    "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
         }
-
         public Index ComputeIndex(string pathToRoot)
         {
             Index index = new Index();
@@ -69,7 +104,8 @@ namespace LLVC
                 {
                     string file = GetLastIdentifier(filePath);
                     //Console.WriteLine(file);
-                    index.FileEntries.Add(relativePath, GetEntry(pathToRoot, Path.Combine(relativePath, file)));
+                    string relativeFilePath = Path.Combine(relativePath, file);
+                    index.FileEntries.Add(relativeFilePath, GetEntry(pathToRoot, relativeFilePath));
                 }
 
                 //Console.WriteLine("Enumerating Directories:");

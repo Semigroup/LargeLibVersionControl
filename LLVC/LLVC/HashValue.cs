@@ -27,9 +27,9 @@ namespace LLVC
 
         public static bool operator ==(HashValue h1, HashValue h2)
         {
-            if (h1 == null)
-                return h2 == null;
-            if (h2 == null)
+            if (h1 is null)
+                return h2 is null;
+            if (h2 is null)
                 return false;
 
             if (h1.Bytes == null)
