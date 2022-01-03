@@ -87,7 +87,7 @@ namespace LLVC
                 throw new InvalidDataException("library.protocol is not correct!\n" +
                     "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
         }
-        public Index ComputeIndex(string pathToRoot)
+        public Index ComputeIndex(string pathToRoot, Action<string> statusUpdateFunction)
         {
             Index index = new Index();
 
@@ -105,6 +105,7 @@ namespace LLVC
                     string file = GetLastIdentifier(filePath);
                     //Console.WriteLine(file);
                     string relativeFilePath = Path.Combine(relativePath, file);
+                    statusUpdateFunction(relativeFilePath);
                     index.FileEntries.Add(relativeFilePath, GetEntry(pathToRoot, relativeFilePath));
                 }
 
@@ -121,6 +122,26 @@ namespace LLVC
             traverseDirectory("");
 
             return index;
+        }
+        public int CountFiles(string pathToRoot)
+        {
+            int number = 0;
+
+            void traverseDirectory(string relativePath)
+            {
+                string absolutePath = Path.Combine(pathToRoot, relativePath);
+                foreach (string filePath in Directory.EnumerateFiles(absolutePath))
+                    number++;
+                foreach (string directoryPath in Directory.EnumerateDirectories(absolutePath))
+                {
+                    string directory = GetLastIdentifier(directoryPath);
+                    if (!directory.StartsWith("."))
+                        traverseDirectory(Path.Combine(relativePath, directory));
+                }
+            }
+            traverseDirectory("");
+
+            return number;
         }
         public string GetLastIdentifier(string path)
         {
@@ -156,7 +177,8 @@ namespace LLVC
             return new HashValue(bytes);
         }
 
-        public Diff GetDiff() => new Diff(this.ProtocolIndex, ComputeIndex(this.PathToLibrary));
+        public Diff GetDiff(Action<string> statusUpdateFunction)
+            => new Diff(this.ProtocolIndex, ComputeIndex(this.PathToLibrary, statusUpdateFunction));
 
         public static void Create(string absolutePathToRoot, string libraryName, HashValue initialHash)
         {

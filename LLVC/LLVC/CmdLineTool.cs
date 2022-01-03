@@ -181,7 +181,27 @@ namespace LLVC
                 Console.WriteLine("You need to select a library before you can use Get.");
                 return;
             }
-            Diff diff = Controller.GetDiff();
+
+            int numberAllFiles = Controller.CountFiles(Controller.PathToLibrary);
+            int top = Console.CursorTop;
+            int left = Console.CursorLeft;
+            int fileNumber = 0;
+            string lastUpdateString = "";
+            DateTime start = DateTime.Now;
+            void statusUpdate(string relativeFilePath)
+            {
+                Console.SetCursorPosition(left, top);
+                string newUpdateString = "Hashing file No. " + (fileNumber + 1) + " of " + numberAllFiles + ": " + relativeFilePath;
+                Console.WriteLine(newUpdateString
+                    + new string(' ', Math.Max(lastUpdateString.Length - newUpdateString.Length, 0)));
+                lastUpdateString = newUpdateString;
+
+                Console.SetCursorPosition(0, top + 3);
+                WriteTimeEstimation(start, fileNumber, numberAllFiles);
+                fileNumber++;
+            }
+
+            Diff diff = Controller.GetDiff(statusUpdate);
             ListDiff(diff);
             if (diff.IsEmpty)
                 return;
@@ -204,6 +224,27 @@ namespace LLVC
             string message = Console.ReadLine();
 
             Controller.Commit(title, message, DateTime.Now, diff);
+        }
+        public void WriteTimeEstimation(DateTime start, int currentItem, int numberAllItmes)
+        {
+            Console.WriteLine("Started at: " + start);
+            Console.Write("[");
+            int length = 100;
+            for (int i = 0; i < length; i++)
+                if ((i + 1) * numberAllItmes <= currentItem * length)
+                    Console.Write('#');
+                else
+                    Console.Write(' ');
+            Console.Write("]");
+            Console.WriteLine(new string(' ', 10));
+
+            TimeSpan past = DateTime.Now.Subtract(start);
+            Console.Write("Running for: " + past);
+            Console.WriteLine(new string(' ', 10));
+            if (currentItem > 0)
+                Console.Write("Estimated remaining time: "
+                    + new TimeSpan((long)(past.Ticks * (numberAllItmes - currentItem) / currentItem)));
+            Console.WriteLine(new string(' ', 10));
         }
         public void ListDiff(Diff diff)
         {
