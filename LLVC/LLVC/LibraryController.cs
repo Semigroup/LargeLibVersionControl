@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Security.Cryptography;
-using System.Runtime.Serialization;
 
 namespace LLVC
 {
@@ -20,12 +18,12 @@ namespace LLVC
         public Protocol Protocol { get; private set; }
         public Index ProtocolIndex { get; private set; }
 
-        public HashAlgorithm HashAlgorithm { get; private set; }
+        public HashFunction HashFunction { get; private set; }
         public XmlSerializer Serializer { get; set; }
 
         public LibraryController(string PathToLibrary)
         {
-            this.HashAlgorithm = MD5.Create();
+            this.HashFunction = new HashFunction();
             this.Serializer = new XmlSerializer(typeof(Protocol));
 
             this.PathToLibrary = PathToLibrary;
@@ -59,7 +57,7 @@ namespace LLVC
                 hash = this.Protocol.InitialHash;
                 number = 0;
             }
-            hash = Protocol.Concat(HashAlgorithm, hash, diff.ComputeHash(HashAlgorithm));
+            hash = Protocol.Concat(HashFunction, hash, diff.ComputeHash(HashFunction));
 
             Commit c = new Commit(number, title, message, timeStamp, hash, diff);
             Protocol.Commits.Add(c);
@@ -82,7 +80,7 @@ namespace LLVC
             if (number != -1)
                 throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
 
-            Commit commit = this.Protocol.CheckHashes(HashAlgorithm);
+            Commit commit = this.Protocol.CheckHashes(HashFunction);
             if (commit != null)
                 throw new InvalidDataException("library.protocol is not correct!\n" +
                     "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
@@ -163,18 +161,7 @@ namespace LLVC
         public FileEntry GetEntry(string pathToRoot, string relativePathToFile)
         {
             string absolutePathToFile = Path.Combine(pathToRoot, relativePathToFile);
-            return new FileEntry(relativePathToFile, Hash(absolutePathToFile));
-        }
-
-        public HashValue Hash(string absolutePathToFile)
-        {
-            byte[] bytes;
-            using (FileStream fileStream = new FileStream(absolutePathToFile, FileMode.Open))
-            {
-                fileStream.Position = 0;
-                bytes = HashAlgorithm.ComputeHash(fileStream);
-            }
-            return new HashValue(bytes);
+            return new FileEntry(relativePathToFile, HashFunction.ComputeHash(absolutePathToFile));
         }
 
         public Diff GetDiff(Action<string> statusUpdateFunction)

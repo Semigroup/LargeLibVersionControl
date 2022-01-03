@@ -15,6 +15,11 @@ namespace LLVC
 
         }
 
+        public HashValue(uint UInt)
+        {
+            this.Bytes = BitConverter.GetBytes(UInt);
+        }
+
         public HashValue(byte[] Bytes)
         {
             this.Bytes = Bytes;

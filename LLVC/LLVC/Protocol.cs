@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace LLVC
 {
@@ -36,18 +35,18 @@ namespace LLVC
             return -1;
         }
 
-        public HashValue Concat(HashAlgorithm HashAlgorithm, HashValue h1, HashValue h2)
+        public HashValue Concat(HashFunction HashFunction, HashValue h1, HashValue h2)
         {
             byte[] concat = h1 * h2;
-            return new HashValue(HashAlgorithm.ComputeHash(concat));
+            return HashFunction.ComputeHash(concat);
         }
 
-        public Commit CheckHashes(HashAlgorithm HashAlgorithm)
+        public Commit CheckHashes(HashFunction HashFunction)
         {
             HashValue currentHash = InitialHash;
             foreach (var c in Commits)
             {
-                if (Concat(HashAlgorithm, currentHash, c.Diff.ComputeHash(HashAlgorithm)) != c.Hash)
+                if (Concat(HashFunction, currentHash, c.Diff.ComputeHash(HashFunction)) != c.Hash)
                     return c;
                 currentHash = c.Hash;
             }

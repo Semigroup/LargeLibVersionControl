@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 using System.IO;
 
 namespace LLVC
@@ -11,7 +10,7 @@ namespace LLVC
     public class CmdLineTool
     {
         public LibraryController Controller { get; set; }
-        public HashAlgorithm HashAlgorithm { get; set; } = MD5.Create();
+        public HashFunction HashFunction { get; set; } = new HashFunction();
 
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
@@ -162,7 +161,7 @@ namespace LLVC
             Console.WriteLine("Creating a new library at " + path + ".");
             Console.WriteLine("Enter a name for the Library:");
             var name = Console.ReadLine();
-            var initialHash = new HashValue(HashAlgorithm.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks)));
+            var initialHash = HashFunction.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks));
 
             try
             {

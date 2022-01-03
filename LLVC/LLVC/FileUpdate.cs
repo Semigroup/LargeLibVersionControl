@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace LLVC
 {
@@ -29,7 +28,7 @@ namespace LLVC
             this.MyType = MyType;
         }
 
-        public HashValue GetHash(HashAlgorithm HashAlgorithm)
+        public HashValue GetHash(HashFunction HashFunction)
         {
             int n = Encoding.UTF8.GetByteCount(File.RelativePath);
             byte[] buffer = new byte[1 + n + File.FileHash.Bytes.Length];
@@ -37,7 +36,7 @@ namespace LLVC
             Encoding.UTF8.GetBytes(File.RelativePath, 0, File.RelativePath.Length, buffer, 1);
             File.FileHash.Bytes.CopyTo(buffer, 1 + n);
 
-            return new HashValue(HashAlgorithm.ComputeHash(buffer));
+            return HashFunction.ComputeHash(buffer);
         }
     }
 }
