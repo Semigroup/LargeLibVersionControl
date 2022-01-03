@@ -226,7 +226,7 @@ namespace LLVC
 
             Controller.Commit(title, message, DateTime.Now, diff);
         }
-        public void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
+        public static void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
             Console.WriteLine("Started at: " + start);
             Console.Write("[");
@@ -244,13 +244,14 @@ namespace LLVC
             Console.WriteLine(new string(' ', 10));
             if (currentItem > 0)
                 Console.Write("Estimated remaining time: "
-                    + new TimeSpan((long)(past.Ticks * (numberAllItmes - currentItem) / currentItem)));
+                    + new TimeSpan((long)(past.Ticks * 1.0 * (numberAllItmes - currentItem) / currentItem)));
             Console.WriteLine(new string(' ', 10));
         }
         public void ListDiff(Diff diff)
         {
             List<FileEntry> deletions = new List<FileEntry>();
             List<FileEntry> changes = new List<FileEntry>();
+            List<FileEntry> additions = new List<FileEntry>();
             foreach (var update in diff.FileUpdates)
                 switch (update.MyType)
                 {
@@ -258,7 +259,10 @@ namespace LLVC
                         deletions.Add(update.File);
                         break;
                     case FileUpdate.Type.Change:
-                        changes.Add(update.File);
+                        if (update.File.FileHash is null)
+                            additions.Add(update.File);
+                        else
+                            changes.Add(update.File);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -299,7 +303,75 @@ namespace LLVC
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes");
+            if (additions.Count > 0)
+            {
+                Console.WriteLine("Additions: " + additions.Count);
+                int i = 0;
+                foreach (var file in additions)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write(file.RelativePath + ", ");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(file.FileHash);
+                    if (i++ > 99)
+                    {
+                        Console.WriteLine("and more ...");
+                        break;
+                    }
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes, " + additions.Count + " Additions");
+        }
+
+        public static IEnumerable<long> PrintHashProgress(long totalSize, List<FileEntry> files)
+        {
+            int left = Console.CursorLeft;
+            int top = Console.CursorTop;
+            string lastUpdateLine1 = "";
+            string lastUpdateLine2 = "";
+            DateTime start = DateTime.Now;
+            long currentSize = 0;
+            long numberAllFiles = files.LongCount();
+            long fileNumber = 0;
+
+            foreach (var entry in files)
+            {
+                string newUpdateLine1 =
+                    "Hashing file No. " + (fileNumber + 1) + " of "
+                    + numberAllFiles + ": " + entry.RelativePath;
+                string newUpdateLine2 =
+                    "Hashed " + GetByteDescription(currentSize)
+                    + " Bytes of " + GetByteDescription(totalSize);
+
+                Console.SetCursorPosition(left, top);
+                Console.WriteLine(newUpdateLine1
+                    + new string(' ', Math.Max(lastUpdateLine1.Length - newUpdateLine1.Length, 0)));
+                lastUpdateLine1 = newUpdateLine1;
+
+                Console.SetCursorPosition(left, top + 2);
+                Console.WriteLine(newUpdateLine2
+                    + new string(' ', Math.Max(lastUpdateLine2.Length - newUpdateLine2.Length, 0)));
+                lastUpdateLine2 = newUpdateLine2;
+
+                Console.SetCursorPosition(left, top + 4);
+                WriteTimeEstimation(start, currentSize, totalSize);
+                fileNumber++;
+                currentSize += entry.Size;
+                yield return fileNumber;
+            }
+        }
+
+        public static string GetByteDescription(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            for (int i = sizes.Length - 1; i >= 0; i--)
+            {
+                long size = 1l << (i * 10);
+                if (bytes >= size)
+                    return (bytes * 1.0 / size).ToString("G3") + " " + sizes[i];
+            }
+            return bytes + " B";
         }
     }
 }

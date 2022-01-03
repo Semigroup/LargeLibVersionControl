@@ -127,7 +127,7 @@ namespace LLVC
 
         public Diff GetQuickDiff()
         {
-            return LookUp.GetChangedFiles(this.HashFunction, this.PathToLibrary, this.ProtocolIndex);
+            return LookUp.GetChangedFiles(this.HashFunction, this.PathToLibrary);
         }
 
         public static LibraryController Create(string absolutePathToRoot, string libraryName, byte[] seed)

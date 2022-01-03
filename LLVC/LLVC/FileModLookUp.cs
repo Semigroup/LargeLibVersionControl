@@ -12,54 +12,65 @@ namespace LLVC
     public class FileModLookUp
     {
         [DataMember()]
-        public SortedDictionary<string, (DateTime timeStamp, HashValue hash)> Table { get; set; }
+        public SortedDictionary<string, FileEntry> Table { get; set; }
 
         public FileModLookUp()
         {
-            Table = new SortedDictionary<string, (DateTime timeStamp, HashValue hash)>();
+            Table = new SortedDictionary<string, FileEntry>();
         }
 
-        public (long size, List<string> writtenFiles) GetNumberSizeWrittenFiles(string pathToRoot)
+        public List<FileEntry> GetLastWrittenFiles(string pathToRoot)
         {
-            List<string> writtenFiles = new List<string>();
-            long size = 0;
+            List<FileEntry> writtenFiles = new List<FileEntry>();
+            long totalSize = 0;
 
-            void fileAction(string relativeFilePath)
+            void fileAction(string absolutePath, string relativeFilePath)
             {
-                var info = new FileInfo(Path.Combine(pathToRoot, relativeFilePath));
-                bool notChanged = Table.ContainsKey(relativeFilePath)
-                    && (Table[relativeFilePath].timeStamp == info.LastWriteTime);
-                if (!notChanged)
+                FileEntry file = new FileEntry(pathToRoot, absolutePath, relativeFilePath);
+                file.ComputeInfo();
+                bool changed = !Table.ContainsKey(relativeFilePath)
+                    || Table[relativeFilePath].LastWrittenTime != file.LastWrittenTime;
+                if (changed)
                 {
-                    writtenFiles.Add(relativeFilePath);
-                    size += info.Length;
+                    writtenFiles.Add(file);
+                    totalSize += file.Size;
                 }
             }
 
-            FileHelper.TraverseFileSystem(pathToRoot, d => { }, fileAction);
-            return (size, writtenFiles);
+            FileHelper.TraverseFileSystem(pathToRoot, fileAction);
+            return writtenFiles;
         }
 
-        public Diff GetChangedFiles(HashFunction hashFunction, string pathToRoot, Index protocolIndex)
+        public Diff GetChangedFiles(HashFunction hashFunction, string pathToRoot)
         {
             Diff diff = new Diff(new List<FileUpdate>());
 
-            foreach (var entry in protocolIndex.FileEntries.Values)
-                if (!File.Exists(Path.Combine(pathToRoot, entry.RelativePath)))
-                    diff.AddDeletion(entry);
+            foreach (var fileEntry in Table.Values)
+                if (!File.Exists(fileEntry.AbsolutePath))
+                    diff.AddDeletion(fileEntry);
 
-            (long size, List<string> writtenFiles) = GetNumberSizeWrittenFiles(pathToRoot);
+            var changedFiles = GetLastWrittenFiles(pathToRoot);
 
-            bool printProgress = size >= (1 << 27);
+            long totalSize = changedFiles.Select(entry => entry.Size).Sum();
+            bool printProgress = totalSize >= (1 << 27);
 
-            void fileAction(string relativeFilePath)
+            var coroutine = CmdLineTool.PrintHashProgress(totalSize, changedFiles).GetEnumerator();
+            foreach (var entry in changedFiles)
             {
-                if (true)
-                {
+                if (printProgress)
+                    coroutine.MoveNext();
 
+                if (Table.ContainsKey(entry.RelativePath))
+                {
+                    entry.ComputeHash(hashFunction);
+                    if (Table[entry.RelativePath].FileHash != entry.FileHash)
+                        diff.AddChange(entry);
+                    else
+                        Table[entry.RelativePath] = entry;
                 }
+                else
+                    diff.AddChange(entry);
             }
-            FileHelper.TraverseFileSystem(pathToRoot)
 
             return diff;
         }

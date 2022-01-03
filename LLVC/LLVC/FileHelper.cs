@@ -14,16 +14,15 @@ namespace LLVC
             long number = 0;
 
             TraverseFileSystem(pathToRoot,
-                    relativeDirectoryPath => { },
-                    relativeFilePath => number++
+                    (x,y) => number++
                 );
 
             return number;
         }
 
-        public static void TraverseFileSystem(string pathToRoot, Action<string> fileAction)
-            => TraverseFileSystem(pathToRoot, directory => { }, fileAction);
-        public static void TraverseFileSystem(string pathToRoot, Action<string> directoryAction, Action<string> fileAction)
+        public static void TraverseFileSystem(string pathToRoot, Action<string, string> fileAction)
+            => TraverseFileSystem(pathToRoot, (string absolute, string relative) => { }, fileAction);
+        public static void TraverseFileSystem(string pathToRoot, Action<string, string> directoryAction, Action<string, string> fileAction)
         {
             void traverseDirectory(string relativePath)
             {
@@ -33,15 +32,17 @@ namespace LLVC
                 {
                     string file = GetLastIdentifier(filePath);
                     string relativeFilePath = Path.Combine(relativePath, file);
-                    fileAction(relativeFilePath);
+                    fileAction(filePath, relativeFilePath);
                 }
                 foreach (string directoryPath in Directory.EnumerateDirectories(absolutePath))
                 {
                     string directory = GetLastIdentifier(directoryPath);
-                    string relativeDirectoryPath = Path.Combine(relativePath, directory);
-                    directoryAction(relativeDirectoryPath);
                     if (!directory.StartsWith("."))
+                    {
+                        string relativeDirectoryPath = Path.Combine(relativePath, directory);
+                        directoryAction(directoryPath, relativeDirectoryPath);
                         traverseDirectory(relativeDirectoryPath);
+                    }
                 }
             }
             traverseDirectory("");
@@ -53,11 +54,10 @@ namespace LLVC
 
             TraverseFileSystem(
                     pathToRoot,
-                    relativeDirectoryPath => { },
-                    relativeFilePath =>
+                    (relativeFilePath, absoluteFilePath) =>
                     {
                         statusUpdateFunction(relativeFilePath);
-                        index.FileEntries.Add(relativeFilePath, new FileEntry(hashFunction, pathToRoot, relativeFilePath));
+                        index.FileEntries.Add(relativeFilePath, new FileEntry(pathToRoot, absoluteFilePath, relativeFilePath));
                     }
                 );
 

@@ -22,8 +22,8 @@ namespace LLVC
 
         public void AddDeletion(FileEntry missingFile)
             => this.FileUpdates.Add(new FileUpdate(missingFile, FileUpdate.Type.Deletion));
-        public void AddChange(string relativeFilePath, HashValue newHash)
-            => this.FileUpdates.Add(new FileUpdate(new FileEntry(relativeFilePath, newHash), FileUpdate.Type.Change));
+        public void AddChange(FileEntry changedFile)
+            => this.FileUpdates.Add(new FileUpdate(changedFile, FileUpdate.Type.Change));
 
         public Diff(Index oldIndex, Index newIndex)
         {

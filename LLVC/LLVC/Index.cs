@@ -27,7 +27,13 @@ namespace LLVC
 
         public HashValue this[string relativeFilePath]
         {
-            get => FileEntries[relativeFilePath].FileHash;
+            get
+            {
+                if (FileEntries.ContainsKey(relativeFilePath))
+                    return FileEntries[relativeFilePath].FileHash;
+                else
+                    return null;
+            }
         }
 
         public void Apply(Diff diff)

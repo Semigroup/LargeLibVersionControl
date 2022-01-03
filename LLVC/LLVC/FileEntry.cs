@@ -10,6 +10,10 @@ namespace LLVC
     public class FileEntry
     {
         public string RelativePath { get; set; }
+        public string PathToRoot { get; set; }
+        public string AbsolutePath { get; set; }
+        public DateTime LastWrittenTime { get; set; }
+        public long Size { get; set; }
         public HashValue FileHash { get; set; }
 
         private FileEntry()
@@ -17,27 +21,35 @@ namespace LLVC
 
         }
 
-        public FileEntry(string RelativePath, HashValue FileHash)
+        public FileEntry(string PathToRoot, string AbsolutePath, string RelativePath)
         {
+            this.PathToRoot = PathToRoot;
+            this.AbsolutePath = AbsolutePath;
             this.RelativePath = RelativePath;
-            this.FileHash = FileHash;
         }
 
-        public FileEntry(HashFunction hashFunction, string pathToRoot, string relativePathToFile)
-            : this(relativePathToFile, hashFunction.ComputeHash(Path.Combine(pathToRoot, relativePathToFile)))
+        public void ComputeInfo()
         {
+            FileInfo info = new FileInfo(AbsolutePath);
+            this.LastWrittenTime = info.LastAccessTime;
+            this.Size = info.Length;
+        }
+        public void ComputeHash(HashFunction hashFunction)
+        {
+            if (FileHash is null)
+                FileHash = hashFunction.ComputeHash(AbsolutePath);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is FileEntry entry))
-                return false;
-            return (this.RelativePath == entry.RelativePath) && (this.FileHash == entry.FileHash);
-        }
+        //public override bool Equals(object obj)
+        //{
+        //    if (!(obj is FileEntry entry))
+        //        return false;
+        //    return (this.RelativePath == entry.RelativePath) && (this.FileHash == entry.FileHash);
+        //}
 
-        public override int GetHashCode()
-        {
-            return RelativePath.GetHashCode() + FileHash.GetHashCode();
-        }
+        //public override int GetHashCode()
+        //{
+        //    return RelativePath.GetHashCode() + FileHash.GetHashCode();
+        //}
     }
 }
