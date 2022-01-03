@@ -7,10 +7,10 @@ using System.IO;
 
 namespace LLVC
 {
-   public class FileEntry
+    public class FileEntry
     {
-        public string RelativePath { get;  set; }
-        public HashValue FileHash { get;  set; }
+        public string RelativePath { get; set; }
+        public HashValue FileHash { get; set; }
 
         private FileEntry()
         {
@@ -21,6 +21,11 @@ namespace LLVC
         {
             this.RelativePath = RelativePath;
             this.FileHash = FileHash;
+        }
+
+        public FileEntry(HashFunction hashFunction, string pathToRoot, string relativePathToFile)
+            : this(relativePathToFile, hashFunction.ComputeHash(Path.Combine(pathToRoot, relativePathToFile)))
+        {
         }
 
         public override bool Equals(object obj)

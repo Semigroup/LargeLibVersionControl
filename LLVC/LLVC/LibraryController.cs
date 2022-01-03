@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Runtime.Serialization;
 
 namespace LLVC
 {
@@ -14,17 +15,21 @@ namespace LLVC
         public string PathToLibrary { get; private set; }
         public string PathToLLVC { get; private set; }
         public string PathToProtocolFile { get; private set; }
+        public string PathToLookUp { get; private set; }
 
         public Protocol Protocol { get; private set; }
         public Index ProtocolIndex { get; private set; }
+        public FileModLookUp LookUp { get; private set; }
 
         public HashFunction HashFunction { get; private set; }
-        public XmlSerializer Serializer { get; set; }
+        public XmlSerializer Serializer { get; private set; }
+        public DataContractSerializer DataSerializer { get; private set; }
 
         public LibraryController(string PathToLibrary)
         {
             this.HashFunction = new HashFunction();
             this.Serializer = new XmlSerializer(typeof(Protocol));
+            this.DataSerializer = new DataContractSerializer(typeof(FileModLookUp));
 
             this.PathToLibrary = PathToLibrary;
             if (!Directory.Exists(PathToLibrary))
@@ -38,8 +43,62 @@ namespace LLVC
             if (!File.Exists(PathToProtocolFile))
                 throw new FileNotFoundException(PathToProtocolFile + " does not exist!");
             ReadProtocol();
-
             this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
+
+            this.PathToLookUp = Path.Combine(PathToLLVC, "lastModified.lookUpTable");
+            if (!File.Exists(PathToLookUp))
+                throw new FileNotFoundException(PathToLookUp + " does not exist!");
+            this.ReadLookUpTable();
+        }
+        private LibraryController(string PathToLibrary, string libraryName, byte[] seed)
+        {
+            this.HashFunction = new HashFunction();
+            this.Serializer = new XmlSerializer(typeof(Protocol));
+            this.DataSerializer = new DataContractSerializer(typeof(FileModLookUp));
+
+            this.PathToLibrary = PathToLibrary;
+            this.PathToLLVC = Path.Combine(PathToLibrary, ".llvc");
+            this.PathToProtocolFile = Path.Combine(PathToLLVC, "library.protocol");
+            this.PathToLookUp = Path.Combine(PathToLLVC, "lastModified.lookUpTable");
+
+            this.Protocol = new Protocol(libraryName, this.HashFunction.ComputeHash(seed));
+            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
+            SaveProtocol();
+
+            this.LookUp = new FileModLookUp();
+            this.SaveLookUpTable();
+        }
+
+        public void SaveProtocol()
+        {
+            using (var openStream = File.OpenWrite(PathToProtocolFile))
+                Serializer.Serialize(openStream, this.Protocol);
+        }
+        public void ReadProtocol()
+        {
+            using (var openStream = File.OpenRead(PathToProtocolFile))
+                this.Protocol = (Protocol)Serializer.Deserialize(openStream);
+
+            int number = this.Protocol.CheckNumbering();
+            if (number != -1)
+                throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
+
+            Commit commit = this.Protocol.CheckHashes(HashFunction);
+            if (commit != null)
+                throw new InvalidDataException("library.protocol is not correct!\n" +
+                    "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
+        }
+        public void SaveLookUpTable()
+        {
+            using (var fs = File.OpenWrite(PathToLookUp))
+            using (var dictWriter = XmlDictionaryWriter.CreateTextWriter(fs, Encoding.UTF8))
+                DataSerializer.WriteObject(fs, this.LookUp);
+        }
+        public void ReadLookUpTable()
+        {
+            using (var fs = File.OpenRead(PathToLookUp))
+            using (var dictReader = XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas()))
+                this.LookUp = (FileModLookUp)DataSerializer.ReadObject(dictReader);
         }
 
         public void Commit(string title, string message, DateTime timeStamp, Diff diff)
@@ -66,108 +125,12 @@ namespace LLVC
             SaveProtocol();
         }
 
-        public void SaveProtocol()
+        public Diff GetQuickDiff()
         {
-            using (var openStream = File.OpenWrite(PathToProtocolFile))
-                Serializer.Serialize(openStream, this.Protocol);
-        }
-        public void ReadProtocol()
-        {
-            using (var openStream = File.OpenRead(PathToProtocolFile))
-                this.Protocol = (Protocol)Serializer.Deserialize(openStream);
-
-            int number = this.Protocol.CheckNumbering();
-            if (number != -1)
-                throw new InvalidDataException("library.protocol is not correct!\nCommit No. " + number + " is missing.");
-
-            Commit commit = this.Protocol.CheckHashes(HashFunction);
-            if (commit != null)
-                throw new InvalidDataException("library.protocol is not correct!\n" +
-                    "Commit " + commit.Number + ", " + commit.Title + ", has a broken hash value.");
-        }
-        public Index ComputeIndex(string pathToRoot, Action<string> statusUpdateFunction)
-        {
-            Index index = new Index();
-
-            void traverseDirectory(string relativePath)
-            {
-                string absolutePath = Path.Combine(pathToRoot, relativePath);
-
-                //Console.WriteLine("pathToRoot: " + pathToRoot);
-                //Console.WriteLine("relativePath: " + relativePath);
-                //Console.WriteLine("absolutePath: " + absolutePath);
-
-                //Console.WriteLine("Enumerating files:");
-                foreach (string filePath in Directory.EnumerateFiles(absolutePath))
-                {
-                    string file = GetLastIdentifier(filePath);
-                    //Console.WriteLine(file);
-                    string relativeFilePath = Path.Combine(relativePath, file);
-                    statusUpdateFunction(relativeFilePath);
-                    index.FileEntries.Add(relativeFilePath, GetEntry(pathToRoot, relativeFilePath));
-                }
-
-                //Console.WriteLine("Enumerating Directories:");
-                foreach (string directoryPath in Directory.EnumerateDirectories(absolutePath))
-                {
-                    string directory = GetLastIdentifier(directoryPath);
-                    //Console.WriteLine(directory);
-                    if (!directory.StartsWith("."))
-                        traverseDirectory(Path.Combine(relativePath, directory));
-                }
-            }
-
-            traverseDirectory("");
-
-            return index;
-        }
-        public long CountFiles(string pathToRoot)
-        {
-            long number = 0;
-
-            void traverseDirectory(string relativePath)
-            {
-                string absolutePath = Path.Combine(pathToRoot, relativePath);
-                foreach (string filePath in Directory.EnumerateFiles(absolutePath))
-                    number++;
-                foreach (string directoryPath in Directory.EnumerateDirectories(absolutePath))
-                {
-                    string directory = GetLastIdentifier(directoryPath);
-                    if (!directory.StartsWith("."))
-                        traverseDirectory(Path.Combine(relativePath, directory));
-                }
-            }
-            traverseDirectory("");
-
-            return number;
-        }
-        public string GetLastIdentifier(string path)
-        {
-            int length = 0;
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                if (path[i] == '\\')
-                {
-                    if (length > 0)
-                        return path.Substring(i + 1, length);
-                }
-                else
-                    length++;
-            }
-
-            return "";
+            return LookUp.GetChangedFiles(this.HashFunction, this.PathToLibrary, this.ProtocolIndex);
         }
 
-        public FileEntry GetEntry(string pathToRoot, string relativePathToFile)
-        {
-            string absolutePathToFile = Path.Combine(pathToRoot, relativePathToFile);
-            return new FileEntry(relativePathToFile, HashFunction.ComputeHash(absolutePathToFile));
-        }
-
-        public Diff GetDiff(Action<string> statusUpdateFunction)
-            => new Diff(this.ProtocolIndex, ComputeIndex(this.PathToLibrary, statusUpdateFunction));
-
-        public static void Create(string absolutePathToRoot, string libraryName, HashValue initialHash)
+        public static LibraryController Create(string absolutePathToRoot, string libraryName, byte[] seed)
         {
             if (!Directory.Exists(absolutePathToRoot))
                 Directory.CreateDirectory(absolutePathToRoot);
@@ -175,10 +138,7 @@ namespace LLVC
             string absolutePathToLLVC = Path.Combine(absolutePathToRoot, ".llvc");
             Directory.CreateDirectory(absolutePathToLLVC);
 
-            Protocol protocol = new Protocol(libraryName, initialHash);
-            XmlSerializer serializer = new XmlSerializer(typeof(Protocol));
-            using (var fs = new FileStream(Path.Combine(absolutePathToLLVC, "library.protocol"), FileMode.CreateNew))
-                serializer.Serialize(fs, protocol);
+            return new LibraryController(absolutePathToRoot, libraryName, seed);
         }
     }
 }

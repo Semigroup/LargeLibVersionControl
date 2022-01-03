@@ -161,12 +161,9 @@ namespace LLVC
             Console.WriteLine("Creating a new library at " + path + ".");
             Console.WriteLine("Enter a name for the Library:");
             var name = Console.ReadLine();
-            var initialHash = HashFunction.ComputeHash(BitConverter.GetBytes(DateTime.Now.Ticks));
-
             try
             {
-                LibraryController.Create(path, name, initialHash);
-                Controller = new LibraryController(path);
+                Controller = LibraryController.Create(path, name, BitConverter.GetBytes(DateTime.Now.Ticks));
             }
             catch (Exception e)
             {
@@ -182,7 +179,7 @@ namespace LLVC
                 return;
             }
 
-            long numberAllFiles = Controller.CountFiles(Controller.PathToLibrary);
+            long numberAllFiles = FileHelper.CountFiles(Controller.PathToLibrary);
             int top = Console.CursorTop;
             int left = Console.CursorLeft;
             long fileNumber = 0;
@@ -201,7 +198,7 @@ namespace LLVC
                 //fileNumber++;
             }
 
-            Diff diff = Controller.GetDiff(statusUpdate);
+            Diff diff = Controller.GetQuickDiff(); //Controller.GetDiff(statusUpdate);
             ListDiff(diff);
 
             Console.WriteLine(DateTime.Now.Subtract(start));

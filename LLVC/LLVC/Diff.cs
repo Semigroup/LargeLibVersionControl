@@ -14,8 +14,16 @@ namespace LLVC
 
         private Diff()
         {
-
         }
+        public Diff(List<FileUpdate> FileUpdates)
+        {
+            this.FileUpdates = FileUpdates;
+        }
+
+        public void AddDeletion(FileEntry missingFile)
+            => this.FileUpdates.Add(new FileUpdate(missingFile, FileUpdate.Type.Deletion));
+        public void AddChange(string relativeFilePath, HashValue newHash)
+            => this.FileUpdates.Add(new FileUpdate(new FileEntry(relativeFilePath, newHash), FileUpdate.Type.Change));
 
         public Diff(Index oldIndex, Index newIndex)
         {
