@@ -123,9 +123,9 @@ namespace LLVC
 
             return index;
         }
-        public int CountFiles(string pathToRoot)
+        public long CountFiles(string pathToRoot)
         {
-            int number = 0;
+            long number = 0;
 
             void traverseDirectory(string relativePath)
             {

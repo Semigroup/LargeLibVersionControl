@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.IO;
 
 namespace LLVC
 {
@@ -182,10 +183,10 @@ namespace LLVC
                 return;
             }
 
-            int numberAllFiles = Controller.CountFiles(Controller.PathToLibrary);
+            long numberAllFiles = Controller.CountFiles(Controller.PathToLibrary);
             int top = Console.CursorTop;
             int left = Console.CursorLeft;
-            int fileNumber = 0;
+            long fileNumber = 0;
             string lastUpdateString = "";
             DateTime start = DateTime.Now;
             void statusUpdate(string relativeFilePath)
@@ -225,7 +226,7 @@ namespace LLVC
 
             Controller.Commit(title, message, DateTime.Now, diff);
         }
-        public void WriteTimeEstimation(DateTime start, int currentItem, int numberAllItmes)
+        public void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
             Console.WriteLine("Started at: " + start);
             Console.Write("[");
@@ -265,24 +266,36 @@ namespace LLVC
             if (deletions.Count > 0)
             {
                 Console.WriteLine("Deletions: " + deletions.Count);
+                int i = 0;
                 foreach (var file in deletions)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write(file.RelativePath + ", ");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.WriteLine(file.FileHash);
+                    if (i++ > 99)
+                    {
+                        Console.WriteLine("and more ...");
+                        break;
+                    }
                 }
                 Console.WriteLine();
             }
             if (changes.Count > 0)
             {
                 Console.WriteLine("Changes: " + changes.Count);
+                int i = 0;
                 foreach (var file in changes)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write(file.RelativePath + ", ");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.WriteLine(file.FileHash);
+                    if (i++ > 99)
+                    {
+                        Console.WriteLine("and more ...");
+                        break;
+                    }
                 }
                 Console.WriteLine();
             }
