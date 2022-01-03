@@ -59,13 +59,48 @@ namespace LLVC
             void traverseDirectory(string relativePath)
             {
                 string absolutePath = Path.Combine(pathToRoot, relativePath);
-                foreach (string file in Directory.EnumerateFiles(absolutePath))
+
+                //Console.WriteLine("pathToRoot: " + pathToRoot);
+                //Console.WriteLine("relativePath: " + relativePath);
+                //Console.WriteLine("absolutePath: " + absolutePath);
+
+                //Console.WriteLine("Enumerating files:");
+                foreach (string filePath in Directory.EnumerateFiles(absolutePath))
+                {
+                    string file = GetLastIdentifier(filePath);
+                    //Console.WriteLine(file);
                     index.FileEntries.Add(relativePath, GetEntry(pathToRoot, Path.Combine(relativePath, file)));
-                foreach (string directory in Directory.EnumerateDirectories(absolutePath))
+                }
+
+                //Console.WriteLine("Enumerating Directories:");
+                foreach (string directoryPath in Directory.EnumerateDirectories(absolutePath))
+                {
+                    string directory = GetLastIdentifier(directoryPath);
+                    //Console.WriteLine(directory);
                     if (!directory.StartsWith("."))
                         traverseDirectory(Path.Combine(relativePath, directory));
+                }
             }
+
+            traverseDirectory("");
+
             return index;
+        }
+        public string GetLastIdentifier(string path)
+        {
+            int length = 0;
+            for (int i = path.Length - 1; i >= 0; i--)
+            {
+                if (path[i] == '\\')
+                {
+                    if (length > 0)
+                        return path.Substring(i + 1, length);
+                }
+                else
+                    length++;
+            }
+
+            return "";
         }
 
         public FileEntry GetEntry(string pathToRoot, string relativePathToFile)
@@ -84,6 +119,8 @@ namespace LLVC
             }
             return new HashValue(bytes);
         }
+
+        public Diff GetDiff() => new Diff(this.ProtocolIndex, ComputeIndex(this.PathToLibrary));
 
         public static void Create(string absolutePathToRoot, string libraryName, HashValue initialHash)
         {

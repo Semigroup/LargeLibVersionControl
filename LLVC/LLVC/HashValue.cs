@@ -22,7 +22,7 @@ namespace LLVC
 
         public string GetBase64()
         {
-            return "=" + Convert.ToBase64String(Bytes, Base64FormattingOptions.None) + "=";
+            return Convert.ToBase64String(Bytes, Base64FormattingOptions.None);
         }
 
         public static bool operator ==(HashValue h1, HashValue h2)

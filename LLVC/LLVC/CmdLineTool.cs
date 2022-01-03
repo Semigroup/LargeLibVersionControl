@@ -53,37 +53,42 @@ namespace LLVC
                 if (words.Count == 0)
                     continue;
 
-                switch (words[0].ToLower())
-                {
-                    case "help":
-                        Console.WriteLine("ToDo");
-                        break;
+                ParseCommand(line, words);
+            }
+        }
 
-                    case "init":
-                        if (words.Count != 2)
-                            Console.WriteLine("Init needs to be followed by a path.");
-                        else
-                            Init(words[1]);
-                        break;
+        public void ParseCommand(string line, List<string> words)
+        {
+            switch (words[0].ToLower())
+            {
+                case "help":
+                    Console.WriteLine("ToDo");
+                    break;
 
-                    case "select":
-                        if (words.Count != 2)
-                            Console.WriteLine("Select needs to be followed by a path.");
-                        else
-                            Select(words[1]);
-                        break;
+                case "init":
+                    if (words.Count != 2)
+                        Console.WriteLine("Init needs to be followed by a path.");
+                    else
+                        Init(words[1]);
+                    break;
 
-                    case "get":
-                        if (words.Count != 1)
-                            Console.WriteLine("Get may not have any arguments.");
-                        else
-                            Get();
-                        break;
+                case "select":
+                    if (words.Count != 2)
+                        Console.WriteLine("Select needs to be followed by a path.");
+                    else
+                        Select(words[1]);
+                    break;
 
-                    default:
-                        Console.WriteLine("Couldnt parse " + line);
-                        break;
-                }
+                case "get":
+                    if (words.Count != 1)
+                        Console.WriteLine("Get may not have any arguments.");
+                    else
+                        Get();
+                    break;
+
+                default:
+                    Console.WriteLine("Couldnt parse " + line);
+                    break;
             }
         }
 
@@ -165,7 +170,55 @@ namespace LLVC
         }
         public void Get()
         {
-
+            if (Controller == null)
+            {
+                Console.WriteLine("You need to select a library before you can use Get.");
+                return;
+            }
+            Diff diff = Controller.GetDiff();
+            ListDiff(diff);
+        }
+        public void ListDiff(Diff diff)
+        {
+            List<FileEntry> deletions = new List<FileEntry>();
+            List<FileEntry> changes = new List<FileEntry>();
+            foreach (var update in diff.FileUpdates)
+                switch (update.MyType)
+                {
+                    case FileUpdate.Type.Deletion:
+                        deletions.Add(update.File);
+                        break;
+                    case FileUpdate.Type.Change:
+                        changes.Add(update.File);
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            if (deletions.Count > 0)
+            {
+                Console.WriteLine("Deletions: " + deletions.Count);
+                foreach (var file in deletions)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write(file.RelativePath + ", ");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(file.FileHash);
+                }
+                Console.WriteLine();
+            }
+            if (changes.Count > 0)
+            {
+                Console.WriteLine("Changes: " + changes.Count);
+                foreach (var file in changes)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write(file.RelativePath + ", ");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(file.FileHash);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes");
         }
     }
 }
