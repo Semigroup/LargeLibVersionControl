@@ -15,25 +15,45 @@ namespace LLVC
         {
         }
 
+        private byte Sum(byte[] bytes)
+        {
+            byte result = 0;
+            for (int i = 0; i < bytes.Length; i++)
+                result += bytes[i];
+            return result;
+        }
+
         public HashValue ComputeHash(byte[] bytes)
         {
-            return new HashValue(Crc32Algorithm.Compute(bytes));
+            //return new HashValue(Crc32CAlgorithm.Compute(bytes));
+            return new HashValue(Sum(bytes));
         }
 
         public HashValue ComputeHash(string absolutePath)
         {
-            uint hash = 0;
+            //uint hash = 0;
+            //using (FileStream fs = File.OpenRead(absolutePath))
+            //{
+            //    byte[] buff = new byte[1024];
+            //    while (fs.Length != fs.Position)
+            //    {
+            //        int count = fs.Read(buff, 0, buff.Length);
+            //        hash = Crc32CAlgorithm.Append(hash, buff, 0, count);
+            //    }
+            //}
+            //return new HashValue(hash);
+
+            byte result = 0;
             using (FileStream fs = File.OpenRead(absolutePath))
             {
                 byte[] buff = new byte[1024];
                 while (fs.Length != fs.Position)
                 {
                     int count = fs.Read(buff, 0, buff.Length);
-                    hash = Crc32Algorithm.Append(hash, buff, 0, count);
+                    result += Sum(buff);
                 }
             }
-            return new HashValue(hash);
-
+            return new HashValue(result);
         }
     }
 }

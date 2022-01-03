@@ -190,19 +190,23 @@ namespace LLVC
             DateTime start = DateTime.Now;
             void statusUpdate(string relativeFilePath)
             {
-                Console.SetCursorPosition(left, top);
-                string newUpdateString = "Hashing file No. " + (fileNumber + 1) + " of " + numberAllFiles + ": " + relativeFilePath;
-                Console.WriteLine(newUpdateString
-                    + new string(' ', Math.Max(lastUpdateString.Length - newUpdateString.Length, 0)));
-                lastUpdateString = newUpdateString;
+                //Console.SetCursorPosition(left, top);
+                //string newUpdateString = "Hashing file No. " + (fileNumber + 1) + " of " + numberAllFiles + ": " + relativeFilePath;
+                //Console.WriteLine(newUpdateString
+                //    + new string(' ', Math.Max(lastUpdateString.Length - newUpdateString.Length, 0)));
+                //lastUpdateString = newUpdateString;
 
-                Console.SetCursorPosition(0, top + 3);
-                WriteTimeEstimation(start, fileNumber, numberAllFiles);
-                fileNumber++;
+                //Console.SetCursorPosition(0, top + 3);
+                //WriteTimeEstimation(start, fileNumber, numberAllFiles);
+                //fileNumber++;
             }
 
             Diff diff = Controller.GetDiff(statusUpdate);
             ListDiff(diff);
+
+            Console.WriteLine(DateTime.Now.Subtract(start));
+
+
             if (diff.IsEmpty)
                 return;
 
