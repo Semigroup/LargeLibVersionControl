@@ -26,14 +26,12 @@ namespace LLVC
             this.PathToRoot = PathToRoot;
             this.AbsolutePath = AbsolutePath;
             this.RelativePath = RelativePath;
-        }
 
-        public void ComputeInfo()
-        {
             FileInfo info = new FileInfo(AbsolutePath);
-            this.LastWrittenTime = info.LastAccessTime;
+            this.LastWrittenTime = info.LastWriteTime;
             this.Size = info.Length;
         }
+
         public void ComputeHash(HashFunction hashFunction)
         {
             if (FileHash is null)

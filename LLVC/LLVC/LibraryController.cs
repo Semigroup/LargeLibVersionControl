@@ -116,13 +116,19 @@ namespace LLVC
                 hash = this.Protocol.InitialHash;
                 number = 0;
             }
+
+            ComputeHashes(diff.FileUpdates.Select(update => update.File));
             hash = Protocol.Concat(HashFunction, hash, diff.ComputeHash(HashFunction));
 
             Commit c = new Commit(number, title, message, timeStamp, hash, diff);
-            Protocol.Commits.Add(c);
+            c.PurgeAbsolutePaths();
+
+            this.Protocol.Commits.Add(c);
             this.ProtocolIndex.Apply(diff);
+            this.LookUp.Update(c);
 
             SaveProtocol();
+            SaveLookUpTable();
         }
 
         public Diff GetQuickDiff()
@@ -131,35 +137,14 @@ namespace LLVC
             {
                 return LookUp.Table[newEntry.RelativePath].LastWrittenTime != newEntry.LastWrittenTime;
             }
-            void entryConflictResolved(FileEntry oldEntry, FileEntry newEntry)
-            {
-                if (oldEntry.FileHash == newEntry.FileHash)
-                    LookUp.Table[newEntry.RelativePath] = newEntry;
-            }
 
-            Diff diff = ComputeDiff(isDirty, entryConflictResolved);
-            SaveLookUpTable();
-
-            return diff;
+            return ComputeDiff(isDirty);
         }
-            
+
         public Diff GetFullDiff()
-        {
-            bool isDirty(FileEntry newEntry) => true;
+            => ComputeDiff(x => true);
 
-            void entryConflictResolved(FileEntry oldEntry, FileEntry newEntry)
-            {
-                if (oldEntry.FileHash == newEntry.FileHash)
-                    LookUp.Table[newEntry.RelativePath] = newEntry;
-            }
-
-            Diff diff = ComputeDiff(isDirty, entryConflictResolved);
-            SaveLookUpTable();
-
-            return diff;
-        }
-
-        public Diff ComputeDiff(Predicate<FileEntry> isDirty, Action<FileEntry, FileEntry> entryConflictResolved)
+        public Diff ComputeDiff(Predicate<FileEntry> isDirty)
         {
             var fileIndex = FileHelper.ComputeIndexFromPath(PathToLibrary);
             Diff diff = new Diff(new List<FileUpdate>());
@@ -179,21 +164,72 @@ namespace LLVC
                 else
                     diff.AddChange(newEntry);
 
-            var coroutine = CmdLineTool.PrintHashProgress(
-                    1 << 27,
-                    needToBeCompared.Select(a => a.newEntry)
-                ).GetEnumerator();
+            ComputeHashes(needToBeCompared.Select(a => a.newEntry));
+
             foreach ((var oldEntry, var newEntry) in needToBeCompared)
             {
-                coroutine.MoveNext();
-
-                newEntry.ComputeHash(HashFunction);
                 if (oldEntry.FileHash != newEntry.FileHash)
                     diff.AddChange(newEntry);
-                entryConflictResolved(oldEntry, newEntry);
+                else
+                    LookUp.Table[newEntry.RelativePath] = newEntry;
             }
+            SaveLookUpTable();
 
             return diff;
+        }
+
+        public void ComputeHashes(IEnumerable<FileEntry> newEntries)
+        {
+            long totalNumber = 0;
+            long totalSize = 0;
+            foreach (var item in newEntries)
+                if (item.FileHash is null)
+                {
+                    totalNumber++;
+                    totalSize += item.Size;
+                }
+            bool printProgress = totalSize >= 1 << 27;
+
+            int left = Console.CursorLeft;
+            int top = Console.CursorTop;
+            string lastUpdateLine1 = "";
+            string lastUpdateLine2 = "";
+            DateTime start = DateTime.Now;
+            long currentSize = 0;
+            long fileNumber = 0;
+
+            foreach (var entry in newEntries)
+            {
+                if (!(entry.FileHash is null))
+                    continue;
+
+                if (printProgress)
+                {
+                    string newUpdateLine1 =
+                    "Hashing file No. " + (fileNumber + 1) + " of "
+                    + totalNumber + ": " + entry.RelativePath;
+                    string newUpdateLine2 =
+                        "Hashed " + CmdLineTool.GetByteDescription(currentSize)
+                        + " Bytes of " + CmdLineTool.GetByteDescription(totalSize);
+
+                    Console.SetCursorPosition(left, top);
+                    Console.WriteLine(newUpdateLine1
+                        + new string(' ', Math.Max(lastUpdateLine1.Length - newUpdateLine1.Length, 0)));
+                    lastUpdateLine1 = newUpdateLine1;
+
+                    Console.SetCursorPosition(left, top + 2);
+                    Console.WriteLine(newUpdateLine2
+                        + new string(' ', Math.Max(lastUpdateLine2.Length - newUpdateLine2.Length, 0)));
+                    lastUpdateLine2 = newUpdateLine2;
+
+                    Console.SetCursorPosition(left, top + 4);
+                    CmdLineTool.WriteTimeEstimation(start, currentSize, totalSize);
+                    fileNumber++;
+                    currentSize += entry.Size;
+                }
+
+                entry.ComputeHash(HashFunction);
+            }
         }
 
         public static LibraryController Create(string absolutePathToRoot, string libraryName, byte[] seed)

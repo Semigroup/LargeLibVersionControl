@@ -31,6 +31,7 @@ namespace LLVC
         public HashValue GetHash(HashFunction HashFunction)
         {
             int n = Encoding.UTF8.GetByteCount(File.RelativePath);
+            File.ComputeHash(HashFunction);
             byte[] buffer = new byte[1 + n + File.FileHash.Bytes.Length];
             buffer[0] = (byte)MyType;
             Encoding.UTF8.GetBytes(File.RelativePath, 0, File.RelativePath.Length, buffer, 1);

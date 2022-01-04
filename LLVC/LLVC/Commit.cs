@@ -35,5 +35,15 @@ namespace LLVC
         {
             return this.Number - other.Number;
         }
+
+        public void PurgeAbsolutePaths()
+        {
+            foreach (var item in Diff.FileUpdates)
+            {
+                var entry = item.File;
+                entry.AbsolutePath = null;
+                entry.PathToRoot = null;
+            }
+        }
     }
 }

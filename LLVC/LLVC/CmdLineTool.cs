@@ -25,6 +25,7 @@ namespace LLVC
         /// 
         /// removeEmptyFolders
         /// replaceWhiteSpaces
+        /// sortMusic : erstellt neue Library und verschiebt musikdateien in Album-Künstler/Album/Titel
         /// 
         /// diagnose [path] : falls nicht korrekt
         /// 
@@ -61,6 +62,13 @@ namespace LLVC
                 Console.Write("[null]: ");
             else
                 Console.Write("[" + Controller.Protocol.LibraryName + "]: ");
+        }
+
+        public void WritePromptLine(string prompt)
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(prompt);
+            Console.ForegroundColor = ConsoleColor.Gray;
         }
 
         public void ParseCommand(string line, List<string> words)
@@ -166,7 +174,7 @@ namespace LLVC
         public void Init(string path)
         {
             Console.WriteLine("Creating a new library at " + path + ".");
-            Console.WriteLine("Enter a name for the Library:");
+            WritePromptLine("Enter a name for the new Library:");
             var name = Console.ReadLine();
             try
             {
@@ -192,7 +200,7 @@ namespace LLVC
             if (diff.IsEmpty)
                 return;
 
-            Console.WriteLine("Enter Commit to commit those changes:");
+            WritePromptLine("Enter Commit to commit those changes:");
             WriteStatusString();
             string line = Console.ReadLine();
             var words = Split(line);
@@ -203,22 +211,26 @@ namespace LLVC
                 return;
             }
 
-            Console.WriteLine("Enter a Title for the Commit:");
+            WritePromptLine("Enter a Title for the Commit:");
             string title = Console.ReadLine();
 
-            Console.WriteLine("Enter a Message for the Commit:");
+            WritePromptLine("Enter a Message for the Commit:");
             string message = Console.ReadLine();
 
             Controller.Commit(title, message, DateTime.Now, diff);
         }
         public static void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
+            char[] waitSymbols = { '|', '/', '-', '\\' };
+
             Console.WriteLine("Started at: " + start);
             Console.Write("[");
             int length = 100;
             for (int i = 0; i < length; i++)
                 if ((i + 1) * numberAllItmes <= currentItem * length)
                     Console.Write('#');
+                else if (i * numberAllItmes <= currentItem * length)
+                    Console.Write(waitSymbols[currentItem % waitSymbols.Length]);
                 else
                     Console.Write(' ');
             Console.Write("]");
@@ -290,54 +302,6 @@ namespace LLVC
                 Console.WriteLine();
             }
             Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes, " + additions.Count + " Additions");
-        }
-
-        public static IEnumerable<long> PrintHashProgress(long sizeThreshold, IEnumerable<FileEntry> files)
-        {
-            long totalNumber = 0;
-            long totalSize = 0;
-            foreach (var item in files)
-            {
-                totalNumber++;
-                totalSize += item.Size;
-            }
-            if (totalSize <= sizeThreshold)
-                yield break;
-
-
-            int left = Console.CursorLeft;
-            int top = Console.CursorTop;
-            string lastUpdateLine1 = "";
-            string lastUpdateLine2 = "";
-            DateTime start = DateTime.Now;
-            long currentSize = 0;
-            long fileNumber = 0;
-
-            foreach (var entry in files)
-            {
-                string newUpdateLine1 =
-                    "Hashing file No. " + (fileNumber + 1) + " of "
-                    + totalNumber + ": " + entry.RelativePath;
-                string newUpdateLine2 =
-                    "Hashed " + GetByteDescription(currentSize)
-                    + " Bytes of " + GetByteDescription(totalSize);
-
-                Console.SetCursorPosition(left, top);
-                Console.WriteLine(newUpdateLine1
-                    + new string(' ', Math.Max(lastUpdateLine1.Length - newUpdateLine1.Length, 0)));
-                lastUpdateLine1 = newUpdateLine1;
-
-                Console.SetCursorPosition(left, top + 2);
-                Console.WriteLine(newUpdateLine2
-                    + new string(' ', Math.Max(lastUpdateLine2.Length - newUpdateLine2.Length, 0)));
-                lastUpdateLine2 = newUpdateLine2;
-
-                Console.SetCursorPosition(left, top + 4);
-                WriteTimeEstimation(start, currentSize, totalSize);
-                fileNumber++;
-                currentSize += entry.Size;
-                yield return fileNumber;
-            }
         }
 
         public static string GetByteDescription(long bytes)

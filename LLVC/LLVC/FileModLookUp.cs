@@ -18,5 +18,14 @@ namespace LLVC
         {
             Table = new SortedDictionary<string, FileEntry>();
         }
+
+        public void Update(Commit commit)
+        {
+            foreach (var item in commit.Diff.FileUpdates)
+            {
+                var entry = item.File;
+                Table[entry.RelativePath] = entry;
+            }
+        }
     }
 }
