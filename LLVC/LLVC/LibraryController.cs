@@ -76,7 +76,7 @@ namespace LLVC
 
         public void SaveProtocol()
         {
-            using (var openStream = File.OpenWrite(PathToProtocolFile))
+            using (var openStream = File.Create(PathToProtocolFile))
                 Serializer.Serialize(openStream, this.Protocol);
         }
         public void ReadProtocol()
@@ -95,7 +95,7 @@ namespace LLVC
         }
         public void SaveLookUpTable()
         {
-            using (var fs = File.OpenWrite(PathToLookUp))
+            using (var fs = File.Create(PathToLookUp))
             using (var dictWriter = XmlDictionaryWriter.CreateTextWriter(fs, Encoding.UTF8))
                 DataSerializer.WriteObject(fs, this.LookUp);
         }
@@ -183,56 +183,10 @@ namespace LLVC
 
         public void ComputeHashes(IEnumerable<FileEntry> newEntries)
         {
-            long totalNumber = 0;
-            long totalSize = 0;
-            foreach (var item in newEntries)
-                if (item.FileHash is null)
-                {
-                    totalNumber++;
-                    totalSize += item.Size;
-                }
-            bool printProgress = totalSize >= 1 << 27;
-
-            int left = Console.CursorLeft;
-            int top = Console.CursorTop;
-            string lastUpdateLine1 = "";
-            string lastUpdateLine2 = "";
-            DateTime start = DateTime.Now;
-            long currentSize = 0;
-            long fileNumber = 0;
-
-            foreach (var entry in newEntries)
-            {
-                if (!(entry.FileHash is null))
-                    continue;
-
-                if (printProgress)
-                {
-                    string newUpdateLine1 =
-                    "Hashing file No. " + (fileNumber + 1) + " of "
-                    + totalNumber + ": " + entry.RelativePath;
-                    string newUpdateLine2 =
-                        "Hashed " + CmdLineTool.GetByteDescription(currentSize)
-                        + " Bytes of " + CmdLineTool.GetByteDescription(totalSize);
-
-                    Console.SetCursorPosition(left, top);
-                    Console.WriteLine(newUpdateLine1
-                        + new string(' ', Math.Max(lastUpdateLine1.Length - newUpdateLine1.Length, 0)));
-                    lastUpdateLine1 = newUpdateLine1;
-
-                    Console.SetCursorPosition(left, top + 2);
-                    Console.WriteLine(newUpdateLine2
-                        + new string(' ', Math.Max(lastUpdateLine2.Length - newUpdateLine2.Length, 0)));
-                    lastUpdateLine2 = newUpdateLine2;
-
-                    Console.SetCursorPosition(left, top + 4);
-                    CmdLineTool.WriteTimeEstimation(start, currentSize, totalSize);
-                    fileNumber++;
-                    currentSize += entry.Size;
-                }
-
-                entry.ComputeHash(HashFunction);
-            }
+            CmdLineTool.WorkOnFiles(
+                newEntries.Where(x => x.FileHash is null), 
+                "Hash", 
+                x => x.ComputeHash(HashFunction));
         }
 
         public LibraryController Copy(string newPathToLibrary, string newLibraryName)

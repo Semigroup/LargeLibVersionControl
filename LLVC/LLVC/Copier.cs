@@ -13,13 +13,18 @@ namespace LLVC
         {
             if (!Directory.Exists(targetPath))
                 Directory.CreateDirectory(targetPath);
-            foreach (var entry in libraryController.ProtocolIndex.FileEntries.Values)
-            {
-                string source = Path.Combine(libraryController.PathToLibrary, entry.RelativePath);
-                string target = Path.Combine(targetPath, entry.RelativePath);
-                Directory.CreateDirectory(target);
-                File.Copy(source, target, true);
-            }
+
+            CmdLineTool.WorkOnFiles(
+                libraryController.ProtocolIndex.FileEntries.Values,
+                "Copy",
+                entry =>
+                {
+                    string source = Path.Combine(libraryController.PathToLibrary, entry.RelativePath);
+                    string target = Path.Combine(targetPath, entry.RelativePath);
+                    Directory.CreateDirectory(Path.GetDirectoryName(target));
+                    File.Copy(source, target, true);
+                }
+                );
 
             var newController = libraryController.Copy(targetPath, newLibraryName);
             newController.SaveProtocol();

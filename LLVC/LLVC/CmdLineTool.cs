@@ -147,6 +147,13 @@ namespace LLVC
                         Console.WriteLine("Get can only be followed by 'full'.");
                     break;
 
+                case "copyto":
+                    if (words.Count != 2)
+                        Console.WriteLine("CopyTo needs to be followed by a path.");
+                    else
+                        CopyTo(words[1]);
+                    break;
+
                 default:
                     Console.WriteLine("Couldnt parse " + line);
                     break;
@@ -201,7 +208,7 @@ namespace LLVC
 
         public void Select(string path)
         {
-                this.Additions = this.Deletions = this.Changes = -1;
+            this.Additions = this.Deletions = this.Changes = -1;
             try
             {
                 Controller = new LibraryController(path);
@@ -264,6 +271,58 @@ namespace LLVC
             Controller.Commit(title, message, DateTime.Now, diff);
             this.Additions = this.Changes = this.Deletions = 0;
         }
+        public void CopyTo(string newLibraryPath)
+        {
+            if (Controller == null)
+            {
+                Console.WriteLine("You need to select a library before you can use CopyTo.");
+                return;
+            }
+            Diff diff = Controller.GetQuickDiff();
+            if (!diff.IsEmpty)
+            {
+                Console.WriteLine("There are uncommitted changes.");
+                Console.WriteLine("Commit those changes before calling CopyTo.");
+                return;
+            }
+
+            if (!Directory.Exists(newLibraryPath))
+            {
+                Console.WriteLine("The directory " + newLibraryPath + "does not exist.");
+                WritePromptLine("Enter Yes, if " + newLibraryPath + " shall be created.");
+                if (!GetYes())
+                {
+                    Console.WriteLine("CopyTo Canceled.");
+                    return;
+                }
+                try
+                {
+                    Directory.CreateDirectory(newLibraryPath);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Creation of " + newLibraryPath + " failed:");
+                    Console.WriteLine(e);
+                    return;
+                }
+                Console.WriteLine("Succesfully created " + newLibraryPath + ".");
+            }
+
+            WritePromptLine("Enter name for new library:");
+            string newLibraryName = Console.ReadLine();
+
+            Console.WriteLine("Started copying of Files...");
+            Copier.CopyTo(Controller, newLibraryPath, newLibraryName);
+
+            Console.WriteLine("Finished copying of Files...");
+
+        }
+        public bool GetYes()
+        {
+            string answer = Console.ReadLine().Trim().ToLower();
+            return answer == "yes" || answer == "y";
+        }
+
         public static void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
             char[] waitSymbols = { '|', '/', '-', '\\' };
@@ -352,7 +411,6 @@ namespace LLVC
             }
             Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes, " + additions.Count + " Additions");
         }
-
         public static string GetByteDescription(long bytes)
         {
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
@@ -363,6 +421,66 @@ namespace LLVC
                     return (bytes * 1.0 / size).ToString("G3") + " " + sizes[i];
             }
             return bytes + " B";
+        }
+        public static void WorkOnFiles(IEnumerable<FileEntry> files, string work, Action<FileEntry> workAction)
+        {
+            long totalNumber = 0;
+            long totalSize = 0;
+            foreach (var item in files)
+            {
+                totalNumber++;
+                totalSize += item.Size;
+            }
+
+            bool printProgress = totalSize >= 1 << 27;
+
+            int left = Console.CursorLeft;
+            int top = Console.CursorTop;
+            string lastUpdateLine1 = "";
+            string lastUpdateLine2 = "";
+            string lastUpdateLine3 = "";
+            DateTime start = DateTime.Now;
+            long currentSize = 0;
+            long fileNumber = 0;
+
+            foreach (var entry in files)
+            {
+                if (printProgress)
+                {
+                    TimeSpan time = DateTime.Now.Subtract(start);
+
+                    string newUpdateLine1 =
+                    work + "ing file No. " + (fileNumber + 1) + " of "
+                    + totalNumber + ": " + entry.RelativePath;
+                    string newUpdateLine2 =
+                        work + "ed " + CmdLineTool.GetByteDescription(currentSize)
+                        + " Bytes of " + CmdLineTool.GetByteDescription(totalSize);
+                    string newUpdateLine3 =
+                       "Average speed: " + 
+                       CmdLineTool.GetByteDescription((long)(currentSize / time.TotalSeconds)) + " per sec.";
+
+                    Console.SetCursorPosition(left, top);
+                    Console.WriteLine(newUpdateLine1
+                        + new string(' ', Math.Max(lastUpdateLine1.Length - newUpdateLine1.Length, 0)));
+                    lastUpdateLine1 = newUpdateLine1;
+
+                    Console.SetCursorPosition(left, top + 2);
+                    Console.WriteLine(newUpdateLine2
+                        + new string(' ', Math.Max(lastUpdateLine2.Length - newUpdateLine2.Length, 0)));
+                    lastUpdateLine2 = newUpdateLine2;
+
+                    Console.SetCursorPosition(left, top + 3);
+                    Console.WriteLine(newUpdateLine3
+                        + new string(' ', Math.Max(lastUpdateLine3.Length - newUpdateLine3.Length, 0)));
+                    lastUpdateLine3 = newUpdateLine3;
+
+                    Console.SetCursorPosition(left, top + 5);
+                    CmdLineTool.WriteTimeEstimation(start, currentSize, totalSize);
+                    fileNumber++;
+                    currentSize += entry.Size;
+                }
+                workAction(entry);
+            }
         }
     }
 }
