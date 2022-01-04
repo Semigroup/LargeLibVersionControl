@@ -15,7 +15,11 @@ namespace LLVC
 
         public MediaDevice Smartphone { get; set; }
 
-        public void ConnectToPhone()
+        public int Additions { get; set; } = -1;
+        public int Changes { get; set; } = -1;
+        public int Deletions { get; set; } = -1;
+
+        public void FindPhone()
         {
             var devices = MediaDevice.GetDevices();
             foreach (var item in devices)
@@ -43,12 +47,12 @@ namespace LLVC
         /// replaceWhiteSpaces
         /// sortMusic : erstellt neue Library und verschiebt musikdateien in Album-Künstler/Album/Titel
         /// 
-        /// diagnose [path] : falls nicht korrekt
+        /// diagnose [path] : falls nicht korrekt?
         /// 
         /// </summary>
         public void Run()
         {
-            ConnectToPhone();
+            //FindPhone();
             while (true)
             {
                 WriteStatusString();
@@ -78,7 +82,26 @@ namespace LLVC
             if (Controller == null)
                 Console.Write("[null]: ");
             else
-                Console.Write("[" + Controller.Protocol.LibraryName + "]: ");
+            {
+                Console.Write("[" + Controller.Protocol.LibraryName);
+                Console.Write(" ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(Additions >= 0 ? Additions.ToString() : "?");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(", ");
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(Changes >= 0 ? Changes.ToString() : "?");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(", ");
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write(Deletions >= 0 ? Deletions.ToString() : "?");
+                Console.ForegroundColor = ConsoleColor.Gray;
+
+                Console.Write("]: ");
+
+            }
         }
 
         public void WritePromptLine(string prompt)
@@ -178,6 +201,7 @@ namespace LLVC
 
         public void Select(string path)
         {
+                this.Additions = this.Deletions = this.Changes = -1;
             try
             {
                 Controller = new LibraryController(path);
@@ -193,6 +217,9 @@ namespace LLVC
             Console.WriteLine("Creating a new library at " + path + ".");
             WritePromptLine("Enter a name for the new Library:");
             var name = Console.ReadLine();
+
+            this.Additions = this.Deletions = this.Changes = -1;
+
             try
             {
                 Controller = LibraryController.Create(path, name, BitConverter.GetBytes(DateTime.Now.Ticks));
@@ -235,6 +262,7 @@ namespace LLVC
             string message = Console.ReadLine();
 
             Controller.Commit(title, message, DateTime.Now, diff);
+            this.Additions = this.Changes = this.Deletions = 0;
         }
         public static void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
@@ -264,6 +292,10 @@ namespace LLVC
         public void ListDiff(Diff diff)
         {
             (var additions, var changes, var deletions) = diff.SortUpdates();
+            this.Deletions = deletions.Count;
+            this.Additions = additions.Count;
+            this.Changes = changes.Count;
+
             if (deletions.Count > 0)
             {
                 Console.WriteLine("Deletions: " + deletions.Count);

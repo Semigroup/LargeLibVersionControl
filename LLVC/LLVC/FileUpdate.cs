@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-   public class FileUpdate
+   public class FileUpdate : ICloneable
     {
         public enum Type
         {
@@ -39,5 +39,12 @@ namespace LLVC
 
             return HashFunction.ComputeHash(buffer);
         }
+
+        public object Clone()
+             => new FileUpdate()
+             {
+                 File = File.Clone() as FileEntry,
+                 MyType = MyType
+             };
     }
 }

@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="CmdLineTool.cs" />
     <Compile Include="Commit.cs" />
+    <Compile Include="Copier.cs" />
     <Compile Include="Diff.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FileHelper.cs" />

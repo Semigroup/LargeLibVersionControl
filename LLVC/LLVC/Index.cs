@@ -7,7 +7,7 @@ using System.IO;
 
 namespace LLVC
 {
-    public class Index
+    public class Index : ICloneable
     {
         public SortedDictionary<string, FileEntry> FileEntries { get; private set; }
 
@@ -99,6 +99,14 @@ namespace LLVC
             foreach (var item in FileEntries.Values)
                 value += item.GetHashCode();
             return value;
+        }
+
+        public object Clone()
+        {
+            SortedDictionary<string, FileEntry> entries = new SortedDictionary<string, FileEntry>();
+            foreach (var item in FileEntries)
+                entries.Add(item.Key, item.Value.Clone() as FileEntry);
+            return new Index(entries);
         }
     }
 }

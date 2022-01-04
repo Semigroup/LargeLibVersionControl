@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-    public class Diff
+    public class Diff : ICloneable
     {
         public List<FileUpdate> FileUpdates { get; set; }
 
@@ -57,5 +57,8 @@ namespace LLVC
                 h += item.GetHash(HashFunction);
             return h;
         }
+
+        public object Clone()
+            => new Diff(this.FileUpdates.Select(x => x.Clone() as FileUpdate).ToList());
     }
 }

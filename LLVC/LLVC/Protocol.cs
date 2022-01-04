@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-   public class Protocol
+   public class Protocol : ICloneable
     {
         public HashValue InitialHash { get; set; }
         public string LibraryName { get; set; }
@@ -52,5 +52,13 @@ namespace LLVC
             }
             return null;
         }
+
+        public object Clone()
+            => new Protocol()
+            {
+                InitialHash = InitialHash,
+                LibraryName = LibraryName,
+                Commits = Commits.Select(x => x.Clone() as Commit).ToList()
+            };
     }
 }

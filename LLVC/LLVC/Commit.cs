@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LLVC
 {
-    public class Commit : IComparable<Commit>
+    public class Commit : IComparable<Commit>, ICloneable
     {
         public int Number { get; set; }
         public string Title { get; set; }
@@ -45,5 +45,16 @@ namespace LLVC
                 entry.PathToRoot = null;
             }
         }
+
+        public object Clone()
+            => new Commit()
+            {
+                Number = Number,
+                Title = Title,
+                Message = Message,
+                TimeStamp = TimeStamp,
+                Hash = Hash,
+                Diff = Diff.Clone() as Diff
+            };
     }
 }

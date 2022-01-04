@@ -9,14 +9,17 @@ using System.IO;
 namespace LLVC
 {
     [DataContract()]
-    public class FileModLookUp
+    public class FileModLookUp : ICloneable
     {
         [DataMember()]
         public SortedDictionary<string, FileEntry> Table { get; set; }
 
-        public FileModLookUp()
+        public FileModLookUp(SortedDictionary<string, FileEntry> Table)
         {
-            Table = new SortedDictionary<string, FileEntry>();
+            this.Table = Table;
+        }
+        public FileModLookUp(): this(new SortedDictionary<string, FileEntry>())
+        {
         }
 
         public void Update(Commit commit)
@@ -26,6 +29,14 @@ namespace LLVC
                 var entry = item.File;
                 Table[entry.RelativePath] = entry;
             }
+        }
+
+        public object Clone()
+        {
+            var table = new SortedDictionary<string, FileEntry>();
+            foreach (var item in Table)
+                table.Add(item.Key, item.Value.Clone() as FileEntry);
+            return new FileModLookUp(table);
         }
     }
 }

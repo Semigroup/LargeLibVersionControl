@@ -25,29 +25,29 @@ namespace LLVC
         public XmlSerializer Serializer { get; private set; }
         public DataContractSerializer DataSerializer { get; private set; }
 
+        private LibraryController()
+        {
+
+        }
         public LibraryController(string PathToLibrary)
         {
             this.HashFunction = new HashFunction();
             this.Serializer = new XmlSerializer(typeof(Protocol));
             this.DataSerializer = new DataContractSerializer(typeof(FileModLookUp));
 
-            this.PathToLibrary = PathToLibrary;
+            ComputePaths(PathToLibrary);
+
             if (!Directory.Exists(PathToLibrary))
                 throw new DirectoryNotFoundException(PathToLibrary + " does not exist!");
-
-            this.PathToLLVC = Path.Combine(PathToLibrary, ".llvc");
             if (!Directory.Exists(PathToLLVC))
                 throw new DirectoryNotFoundException(PathToLLVC + " does not exist!");
-
-            this.PathToProtocolFile = Path.Combine(PathToLLVC, "library.protocol");
             if (!File.Exists(PathToProtocolFile))
                 throw new FileNotFoundException(PathToProtocolFile + " does not exist!");
-            ReadProtocol();
-            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
-
-            this.PathToLookUp = Path.Combine(PathToLLVC, "lastModified.lookUpTable");
             if (!File.Exists(PathToLookUp))
                 throw new FileNotFoundException(PathToLookUp + " does not exist!");
+
+            ReadProtocol();
+            this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
             this.ReadLookUpTable();
         }
         private LibraryController(string PathToLibrary, string libraryName, byte[] seed)
@@ -56,10 +56,7 @@ namespace LLVC
             this.Serializer = new XmlSerializer(typeof(Protocol));
             this.DataSerializer = new DataContractSerializer(typeof(FileModLookUp));
 
-            this.PathToLibrary = PathToLibrary;
-            this.PathToLLVC = Path.Combine(PathToLibrary, ".llvc");
-            this.PathToProtocolFile = Path.Combine(PathToLLVC, "library.protocol");
-            this.PathToLookUp = Path.Combine(PathToLLVC, "lastModified.lookUpTable");
+            ComputePaths(PathToLibrary);
 
             this.Protocol = new Protocol(libraryName, this.HashFunction.ComputeHash(seed));
             this.ProtocolIndex = new Index(this.Protocol.Commits.Select(c => c.Diff));
@@ -67,6 +64,14 @@ namespace LLVC
 
             this.LookUp = new FileModLookUp();
             this.SaveLookUpTable();
+        }
+
+        private void ComputePaths(string PathToLibrary)
+        {
+            this.PathToLibrary = PathToLibrary;
+            this.PathToLLVC = Path.Combine(PathToLibrary, ".llvc");
+            this.PathToProtocolFile = Path.Combine(PathToLLVC, "library.protocol");
+            this.PathToLookUp = Path.Combine(PathToLLVC, "lastModified.lookUpTable");
         }
 
         public void SaveProtocol()
@@ -140,10 +145,8 @@ namespace LLVC
 
             return ComputeDiff(isDirty);
         }
-
         public Diff GetFullDiff()
             => ComputeDiff(x => true);
-
         public Diff ComputeDiff(Predicate<FileEntry> isDirty)
         {
             var fileIndex = FileHelper.ComputeIndexFromPath(PathToLibrary);
@@ -230,6 +233,24 @@ namespace LLVC
 
                 entry.ComputeHash(HashFunction);
             }
+        }
+
+        public LibraryController Copy(string newPathToLibrary, string newLibraryName)
+        {
+            var controller = new LibraryController()
+            {
+                HashFunction = new HashFunction(),
+                Serializer = Serializer,
+                DataSerializer = DataSerializer,
+
+                Protocol = Protocol.Clone() as Protocol,
+                ProtocolIndex = ProtocolIndex.Clone() as Index,
+                LookUp = LookUp.Clone() as FileModLookUp,
+            };
+            controller.ComputePaths(newPathToLibrary);
+            controller.Protocol.LibraryName = newLibraryName;
+
+            return controller;
         }
 
         public static LibraryController Create(string absolutePathToRoot, string libraryName, byte[] seed)

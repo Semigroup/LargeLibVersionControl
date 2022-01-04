@@ -7,7 +7,7 @@ using System.IO;
 
 namespace LLVC
 {
-    public class FileEntry
+    public class FileEntry : ICloneable
     {
         public string RelativePath { get; set; }
         public string PathToRoot { get; set; }
@@ -38,6 +38,16 @@ namespace LLVC
                 FileHash = hashFunction.ComputeHash(AbsolutePath);
         }
 
+        public object Clone()
+            => new FileEntry()
+            {
+                RelativePath = RelativePath,
+                PathToRoot = PathToRoot,
+                AbsolutePath = AbsolutePath,
+                FileHash = FileHash,
+                LastWrittenTime = LastWrittenTime,
+                Size = Size
+            };
         //public override bool Equals(object obj)
         //{
         //    if (!(obj is FileEntry entry))
