@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MediaDevices, Version=1.9.1.0, Culture=neutral, PublicKeyToken=36ac35b4ea7a1f67, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaDevices.1.9.1\lib\net45\MediaDevices.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -61,6 +64,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="MediaDevices.chm" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="MediaDevicesLicense.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

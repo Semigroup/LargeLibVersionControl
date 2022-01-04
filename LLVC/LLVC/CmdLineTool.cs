@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using MediaDevices;
 
 namespace LLVC
 {
@@ -11,6 +12,21 @@ namespace LLVC
     {
         public LibraryController Controller { get; set; }
         public HashFunction HashFunction { get; set; } = new HashFunction();
+
+        public MediaDevice Smartphone { get; set; }
+
+        public void ConnectToPhone()
+        {
+            var devices = MediaDevice.GetDevices();
+            foreach (var item in devices)
+                if (item.FriendlyName.ToLower().Contains("phone"))
+                {
+                    Console.WriteLine("Found phone: " + item.FriendlyName);
+                    Console.WriteLine("Adding phone directories to file system.");
+                    this.Smartphone = item;
+                    return;
+                }
+        }
 
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
@@ -32,6 +48,7 @@ namespace LLVC
         /// </summary>
         public void Run()
         {
+            ConnectToPhone();
             while (true)
             {
                 WriteStatusString();
