@@ -25,25 +25,28 @@ namespace LLVC
         public void AddChange(FileEntry changedFile)
             => this.FileUpdates.Add(new FileUpdate(changedFile, FileUpdate.Type.Change));
 
-        public Diff(Index oldIndex, Index newIndex)
+        public (List<FileEntry> additions, List<FileEntry> changes, List<FileEntry> deletions )
+            SortUpdates()
         {
-            FileUpdates = new List<FileUpdate>();
-
-            foreach (var file in oldIndex.FileEntries.Keys)
-            {
-                var oldHash = oldIndex[file];
-                if (newIndex.FileEntries.ContainsKey(file))
+            List<FileEntry> deletions = new List<FileEntry>();
+            List<FileEntry> changes = new List<FileEntry>();
+            List<FileEntry> additions = new List<FileEntry>();
+            foreach (var update in FileUpdates)
+                switch (update.MyType)
                 {
-                    var newHash = newIndex[file];
-                    if (oldHash != newHash)
-                        FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
+                    case FileUpdate.Type.Deletion:
+                        deletions.Add(update.File);
+                        break;
+                    case FileUpdate.Type.Change:
+                        if (update.File.FileHash is null)
+                            additions.Add(update.File);
+                        else
+                            changes.Add(update.File);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
-                else
-                    FileUpdates.Add(new FileUpdate(oldIndex.FileEntries[file], FileUpdate.Type.Deletion));
-            }
-            foreach (var file in newIndex.FileEntries.Keys)
-                if (!oldIndex.FileEntries.ContainsKey(file))
-                    FileUpdates.Add(new FileUpdate(newIndex.FileEntries[file], FileUpdate.Type.Change));
+            return (additions, changes, deletions);
         }
 
         public HashValue ComputeHash(HashFunction HashFunction)

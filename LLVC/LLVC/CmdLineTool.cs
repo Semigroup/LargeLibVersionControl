@@ -86,10 +86,17 @@ namespace LLVC
                     break;
 
                 case "get":
-                    if (words.Count != 1)
-                        Console.WriteLine("Get may not have any arguments.");
+                    if (words.Count == 1)
+                        Get(false);
+                    else if (words.Count == 2)
+                    {
+                        if (words[1].ToLower() == "full")
+                            Get(true);
+                        else
+                            Console.WriteLine("Get can only be followed by 'full'.");
+                    }
                     else
-                        Get();
+                        Console.WriteLine("Get can only be followed by 'full'.");
                     break;
 
                 default:
@@ -171,7 +178,7 @@ namespace LLVC
                 Controller = null;
             }
         }
-        public void Get()
+        public void Get(bool fullCheck)
         {
             if (Controller == null)
             {
@@ -179,30 +186,8 @@ namespace LLVC
                 return;
             }
 
-            long numberAllFiles = FileHelper.CountFiles(Controller.PathToLibrary);
-            int top = Console.CursorTop;
-            int left = Console.CursorLeft;
-            long fileNumber = 0;
-            string lastUpdateString = "";
-            DateTime start = DateTime.Now;
-            void statusUpdate(string relativeFilePath)
-            {
-                //Console.SetCursorPosition(left, top);
-                //string newUpdateString = "Hashing file No. " + (fileNumber + 1) + " of " + numberAllFiles + ": " + relativeFilePath;
-                //Console.WriteLine(newUpdateString
-                //    + new string(' ', Math.Max(lastUpdateString.Length - newUpdateString.Length, 0)));
-                //lastUpdateString = newUpdateString;
-
-                //Console.SetCursorPosition(0, top + 3);
-                //WriteTimeEstimation(start, fileNumber, numberAllFiles);
-                //fileNumber++;
-            }
-
-            Diff diff = Controller.GetQuickDiff(); //Controller.GetDiff(statusUpdate);
+            Diff diff = fullCheck ? Controller.GetFullDiff() : Controller.GetQuickDiff();
             ListDiff(diff);
-
-            Console.WriteLine(DateTime.Now.Subtract(start));
-
 
             if (diff.IsEmpty)
                 return;
@@ -212,7 +197,7 @@ namespace LLVC
             string line = Console.ReadLine();
             var words = Split(line);
 
-            if (words.Count != 1 && words[0].ToLower() != "commit")
+            if (words.Count != 1 || words[0].ToLower() != "commit")
             {
                 ParseCommand(line, words);
                 return;
@@ -249,24 +234,7 @@ namespace LLVC
         }
         public void ListDiff(Diff diff)
         {
-            List<FileEntry> deletions = new List<FileEntry>();
-            List<FileEntry> changes = new List<FileEntry>();
-            List<FileEntry> additions = new List<FileEntry>();
-            foreach (var update in diff.FileUpdates)
-                switch (update.MyType)
-                {
-                    case FileUpdate.Type.Deletion:
-                        deletions.Add(update.File);
-                        break;
-                    case FileUpdate.Type.Change:
-                        if (update.File.FileHash is null)
-                            additions.Add(update.File);
-                        else
-                            changes.Add(update.File);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
+            (var additions, var changes, var deletions) = diff.SortUpdates();
             if (deletions.Count > 0)
             {
                 Console.WriteLine("Deletions: " + deletions.Count);
@@ -324,22 +292,32 @@ namespace LLVC
             Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes, " + additions.Count + " Additions");
         }
 
-        public static IEnumerable<long> PrintHashProgress(long totalSize, List<FileEntry> files)
+        public static IEnumerable<long> PrintHashProgress(long sizeThreshold, IEnumerable<FileEntry> files)
         {
+            long totalNumber = 0;
+            long totalSize = 0;
+            foreach (var item in files)
+            {
+                totalNumber++;
+                totalSize += item.Size;
+            }
+            if (totalSize <= sizeThreshold)
+                yield break;
+
+
             int left = Console.CursorLeft;
             int top = Console.CursorTop;
             string lastUpdateLine1 = "";
             string lastUpdateLine2 = "";
             DateTime start = DateTime.Now;
             long currentSize = 0;
-            long numberAllFiles = files.LongCount();
             long fileNumber = 0;
 
             foreach (var entry in files)
             {
                 string newUpdateLine1 =
                     "Hashing file No. " + (fileNumber + 1) + " of "
-                    + numberAllFiles + ": " + entry.RelativePath;
+                    + totalNumber + ": " + entry.RelativePath;
                 string newUpdateLine2 =
                     "Hashed " + GetByteDescription(currentSize)
                     + " Bytes of " + GetByteDescription(totalSize);

@@ -48,15 +48,14 @@ namespace LLVC
             traverseDirectory("");
         }
 
-        public static Index ComputeIndexFromPath(HashFunction hashFunction, string pathToRoot, Action<string> statusUpdateFunction)
+        public static Index ComputeIndexFromPath(string pathToRoot)
         {
             Index index = new Index();
 
             TraverseFileSystem(
                     pathToRoot,
-                    (relativeFilePath, absoluteFilePath) =>
+                    (absoluteFilePath, relativeFilePath) =>
                     {
-                        statusUpdateFunction(relativeFilePath);
                         index.FileEntries.Add(relativeFilePath, new FileEntry(pathToRoot, absoluteFilePath, relativeFilePath));
                     }
                 );

@@ -127,7 +127,73 @@ namespace LLVC
 
         public Diff GetQuickDiff()
         {
-            return LookUp.GetChangedFiles(this.HashFunction, this.PathToLibrary);
+            bool isDirty(FileEntry newEntry)
+            {
+                return LookUp.Table[newEntry.RelativePath].LastWrittenTime != newEntry.LastWrittenTime;
+            }
+            void entryConflictResolved(FileEntry oldEntry, FileEntry newEntry)
+            {
+                if (oldEntry.FileHash == newEntry.FileHash)
+                    LookUp.Table[newEntry.RelativePath] = newEntry;
+            }
+
+            Diff diff = ComputeDiff(isDirty, entryConflictResolved);
+            SaveLookUpTable();
+
+            return diff;
+        }
+            
+        public Diff GetFullDiff()
+        {
+            bool isDirty(FileEntry newEntry) => true;
+
+            void entryConflictResolved(FileEntry oldEntry, FileEntry newEntry)
+            {
+                if (oldEntry.FileHash == newEntry.FileHash)
+                    LookUp.Table[newEntry.RelativePath] = newEntry;
+            }
+
+            Diff diff = ComputeDiff(isDirty, entryConflictResolved);
+            SaveLookUpTable();
+
+            return diff;
+        }
+
+        public Diff ComputeDiff(Predicate<FileEntry> isDirty, Action<FileEntry, FileEntry> entryConflictResolved)
+        {
+            var fileIndex = FileHelper.ComputeIndexFromPath(PathToLibrary);
+            Diff diff = new Diff(new List<FileUpdate>());
+
+            var needToBeCompared = new List<(FileEntry oldEntry, FileEntry newEntry)>();
+
+            foreach (var oldEntry in ProtocolIndex.FileEntries.Values)
+                if (!fileIndex.FileEntries.ContainsKey(oldEntry.RelativePath))
+                    diff.AddDeletion(oldEntry);
+
+            foreach (var newEntry in fileIndex.FileEntries.Values)
+                if (ProtocolIndex.FileEntries.TryGetValue(newEntry.RelativePath, out FileEntry oldEntry))
+                {
+                    if (isDirty(newEntry))
+                        needToBeCompared.Add((oldEntry, newEntry));
+                }
+                else
+                    diff.AddChange(newEntry);
+
+            var coroutine = CmdLineTool.PrintHashProgress(
+                    1 << 27,
+                    needToBeCompared.Select(a => a.newEntry)
+                ).GetEnumerator();
+            foreach ((var oldEntry, var newEntry) in needToBeCompared)
+            {
+                coroutine.MoveNext();
+
+                newEntry.ComputeHash(HashFunction);
+                if (oldEntry.FileHash != newEntry.FileHash)
+                    diff.AddChange(newEntry);
+                entryConflictResolved(oldEntry, newEntry);
+            }
+
+            return diff;
         }
 
         public static LibraryController Create(string absolutePathToRoot, string libraryName, byte[] seed)
