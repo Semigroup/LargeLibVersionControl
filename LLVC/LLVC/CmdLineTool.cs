@@ -47,8 +47,6 @@ namespace LLVC
         /// replaceWhiteSpaces
         /// sortMusic : erstellt neue Library und verschiebt musikdateien in Album-Künstler/Album/Titel
         /// 
-        /// diagnose [path] : falls nicht korrekt?
-        /// 
         /// </summary>
         public void Run()
         {
