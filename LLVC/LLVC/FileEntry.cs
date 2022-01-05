@@ -48,16 +48,5 @@ namespace LLVC
                 LastWrittenTime = LastWrittenTime,
                 Size = Size
             };
-        //public override bool Equals(object obj)
-        //{
-        //    if (!(obj is FileEntry entry))
-        //        return false;
-        //    return (this.RelativePath == entry.RelativePath) && (this.FileHash == entry.FileHash);
-        //}
-
-        //public override int GetHashCode()
-        //{
-        //    return RelativePath.GetHashCode() + FileHash.GetHashCode();
-        //}
     }
 }

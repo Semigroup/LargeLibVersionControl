@@ -19,6 +19,7 @@ namespace LLVC
             FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fileVersionInfo.ProductVersion;
             Console.WriteLine("Version: " + version);
+            Console.WriteLine();
 
             var tool = new CmdLineTool();
             tool.Run();

@@ -110,13 +110,60 @@ namespace LLVC
             Console.WriteLine(prompt);
             Console.ForegroundColor = ConsoleColor.Gray;
         }
+        public void PrintHelp()
+        {
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Select [path]");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Select will open the library at the given path, if possible.");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Init [path]");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Init will create a new library at the given path.");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Get [full?]");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Get will make a quick check if there have been any file changes.");
+            Console.WriteLine("Get full will make a full check if there have been any changes by");
+            Console.WriteLine("computing SHA256 values of all files in the current library.");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Commit");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("After calling Get, you can enter Commit to commit the detected file changes.");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("CopyTo [path]");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("CopyTo will copy the whole content of the current library to the given path.");
+            Console.WriteLine("Existing files will be overwritten in the process!");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("CompareTo [path]");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("CompareTo will compare the state of the current library " +
+                "with the state of a library at the given path.");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Sync");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("After calling CompareTo, if one of the given libraries is ahead by a number of commits,");
+            Console.WriteLine("you can enter Sync to update the library that is behind.");
+            Console.WriteLine();
+        }
 
         public void ParseCommand(string line, List<string> words)
         {
             switch (words[0].ToLower())
             {
                 case "help":
-                    Console.WriteLine("ToDo");
+                    PrintHelp();
                     break;
 
                 case "init":
