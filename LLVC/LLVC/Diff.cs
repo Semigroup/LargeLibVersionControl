@@ -60,5 +60,17 @@ namespace LLVC
 
         public object Clone()
             => new Diff(this.FileUpdates.Select(x => x.Clone() as FileUpdate).ToList());
+
+        public static SortedDictionary<string, FileUpdate> Accumulate(IEnumerable<Diff> diffs)
+        {
+            var updates = new SortedDictionary<string, FileUpdate>();
+            foreach (var diff in diffs)
+                foreach (var update in diff.FileUpdates)
+                    if (updates.ContainsKey(update.File.RelativePath))
+                        updates[update.File.RelativePath] = update;
+                    else
+                        updates.Add(update.File.RelativePath, update);
+            return updates;
+        }
     }
 }

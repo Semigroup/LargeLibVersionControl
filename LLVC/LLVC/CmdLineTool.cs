@@ -366,9 +366,11 @@ namespace LLVC
                     break;
                 case ComparisonResult.ResultType.AIsAhead:
                     Console.WriteLine(Controller.FullName + " is ahead by " + comparison.HeadStart + " commits.");
+                    Synchronize(Controller, newController);
                     break;
                 case ComparisonResult.ResultType.BIsAhead:
                     Console.WriteLine(newController.FullName + " is ahead by " + comparison.HeadStart + " commits.");
+                    Synchronize(newController, Controller);
                     break;
                 case ComparisonResult.ResultType.NotComparable:
                     Console.WriteLine(Controller.FullName + " and " + newController.FullName + " cannot be compared. " +
@@ -392,8 +394,32 @@ namespace LLVC
                 ParseCommand(line, words);
                 return;
             }
+            int bCommits = controllerB.Protocol.Commits.Count;
+            var commitsAhead = controllerA.Protocol.Commits.Skip(bCommits);
 
-            Diff toApply = 
+            var toApply = Diff.Accumulate(
+                commitsAhead.Select(c => c.Diff)
+                    );
+
+            foreach (var update in toApply.Values)
+                if (update.MyType == FileUpdate.Type.Deletion)
+                    File.Delete(Path.Combine(controllerB.PathToLibrary, update.File.RelativePath));
+
+            Copier.CopyTo(
+                controllerA.PathToLibrary,
+                controllerB.PathToLibrary,
+                toApply.Values.Where(x => x.MyType == FileUpdate.Type.Change).Select(x => x.File)
+                );
+
+            controllerB.Protocol.Commits.AddRange(commitsAhead);
+            foreach (var item in toApply.Values)
+                if (item.MyType == FileUpdate.Type.Deletion)
+                    controllerB.LookUp.Table.Remove(item.File.RelativePath);
+                else
+                    controllerB.LookUp.Table[item.File.RelativePath]
+                        = controllerA.LookUp.Table[item.File.RelativePath].Clone() as FileEntry;
+            controllerB.SaveProtocol();
+            controllerB.SaveLookUpTable();
         }
 
         public bool GetYes()

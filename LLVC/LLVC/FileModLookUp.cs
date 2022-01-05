@@ -18,7 +18,7 @@ namespace LLVC
         {
             this.Table = Table;
         }
-        public FileModLookUp(): this(new SortedDictionary<string, FileEntry>())
+        public FileModLookUp() : this(new SortedDictionary<string, FileEntry>())
         {
         }
 
@@ -27,7 +27,10 @@ namespace LLVC
             foreach (var item in commit.Diff.FileUpdates)
             {
                 var entry = item.File;
-                Table[entry.RelativePath] = entry;
+                if (item.MyType == FileUpdate.Type.Deletion)
+                    Table.Remove(entry.RelativePath);
+                else
+                    Table[entry.RelativePath] = entry;
             }
         }
 

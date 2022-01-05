@@ -14,8 +14,6 @@ namespace LLVC
             if (!Directory.Exists(targetPath))
                 Directory.CreateDirectory(targetPath);
 
-            //Queue<Task> tasks = new Queue<Task>();
-
             CmdLineTool.WorkOnFiles(
                 libraryController.ProtocolIndex.FileEntries.Values,
                 "Copy",
@@ -25,7 +23,6 @@ namespace LLVC
                     string target = Path.Combine(targetPath, entry.RelativePath);
                     Directory.CreateDirectory(Path.GetDirectoryName(target));
                     File.Copy(source, target, true);
-                    //tasks.Enqueue(CopyFileAsync(source, target));
                 }
                 );
 
@@ -33,6 +30,20 @@ namespace LLVC
             Directory.CreateDirectory(newController.PathToLLVC);
             newController.SaveProtocol();
             newController.SaveLookUpTable();
+        }
+        public static void CopyTo(string sourcePath, string targetPath, IEnumerable<FileEntry> filesToBeCopied)
+        {
+            CmdLineTool.WorkOnFiles(
+                filesToBeCopied,
+                "Copy",
+                entry =>
+                {
+                    string source = Path.Combine(sourcePath, entry.RelativePath);
+                    string target = Path.Combine(targetPath, entry.RelativePath);
+                    Directory.CreateDirectory(Path.GetDirectoryName(target));
+                    File.Copy(source, target, true);
+                }
+                );
         }
 
         public static async Task CopyFileAsync(string sourceFile, string destinationFile)
