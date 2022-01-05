@@ -154,6 +154,13 @@ namespace LLVC
                         CopyTo(words[1]);
                     break;
 
+                case "compareto":
+                    if (words.Count != 2)
+                        Console.WriteLine("CompareTo needs to be followed by a path.");
+                    else
+                        CompareTo(words[1]);
+                    break;
+
                 default:
                     Console.WriteLine("Couldnt parse " + line);
                     break;
@@ -317,12 +324,49 @@ namespace LLVC
             Console.WriteLine("Finished copying of Files...");
 
         }
+        public void CompareTo(string newLibraryPath)
+        {
+            if (Controller == null)
+            {
+                Console.WriteLine("You need to select a library before you can use CompareTo.");
+                return;
+            }
+            Diff diff = Controller.GetQuickDiff();
+            if (!diff.IsEmpty)
+            {
+                Console.WriteLine("There are uncommitted changes in " + Controller.PathToLibrary);
+                Console.WriteLine("Commit those changes before calling CompareTo.");
+                return;
+            }
+
+            LibraryController newController = null;
+            try
+            {
+                newController = new LibraryController(newLibraryPath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return;
+            }
+            diff = newController.GetQuickDiff();
+            if (!diff.IsEmpty)
+            {
+                Console.WriteLine("There are uncommitted changes in " + newController.PathToLibrary);
+                Console.WriteLine("Commit those changes before calling CompareTo.");
+                return;
+            }
+
+
+
+
+        }
+
         public bool GetYes()
         {
             string answer = Console.ReadLine().Trim().ToLower();
             return answer == "yes" || answer == "y";
         }
-
         public static void WriteTimeEstimation(DateTime start, long currentItem, long numberAllItmes)
         {
             char[] waitSymbols = { '|', '/', '-', '\\' };
