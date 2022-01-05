@@ -25,6 +25,8 @@ namespace LLVC
         public XmlSerializer Serializer { get; private set; }
         public DataContractSerializer DataSerializer { get; private set; }
 
+        public string FullName => Protocol.LibraryName + " (" + PathToLibrary + ")";
+
         private LibraryController()
         {
 

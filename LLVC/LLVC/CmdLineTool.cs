@@ -334,7 +334,7 @@ namespace LLVC
             Diff diff = Controller.GetQuickDiff();
             if (!diff.IsEmpty)
             {
-                Console.WriteLine("There are uncommitted changes in " + Controller.PathToLibrary);
+                Console.WriteLine("There are uncommitted changes in " + Controller.FullName);
                 Console.WriteLine("Commit those changes before calling CompareTo.");
                 return;
             }
@@ -352,14 +352,48 @@ namespace LLVC
             diff = newController.GetQuickDiff();
             if (!diff.IsEmpty)
             {
-                Console.WriteLine("There are uncommitted changes in " + newController.PathToLibrary);
+                Console.WriteLine("There are uncommitted changes in " + newController.FullName);
                 Console.WriteLine("Commit those changes before calling CompareTo.");
                 return;
             }
 
+            var comparison = new ComparisonResult(Controller.Protocol, newController.Protocol);
 
+            switch (comparison.Type)
+            {
+                case ComparisonResult.ResultType.Synchronous:
+                    Console.WriteLine(Controller.FullName + " and " + newController.FullName + " are synchronous.");
+                    break;
+                case ComparisonResult.ResultType.AIsAhead:
+                    Console.WriteLine(Controller.FullName + " is ahead by " + comparison.HeadStart + " commits.");
+                    break;
+                case ComparisonResult.ResultType.BIsAhead:
+                    Console.WriteLine(newController.FullName + " is ahead by " + comparison.HeadStart + " commits.");
+                    break;
+                case ComparisonResult.ResultType.NotComparable:
+                    Console.WriteLine(Controller.FullName + " and " + newController.FullName + " cannot be compared. " +
+                        "They have different hash seeds.");
+                    break;
+                case ComparisonResult.ResultType.Dismerged:
+                    Console.WriteLine(Controller.FullName + " and " + newController.FullName + " dismerged at commit No."
+                        + comparison.DismergedAt + ".");
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+        public void Synchronize(LibraryController controllerA, LibraryController controllerB)
+        {
+            WritePromptLine("Enter sync to synchronize " + controllerB.FullName + ":");
+            string line = Console.ReadLine();
+            var words = Split(line);
+            if (words.Count != 1 || words[0].ToLower() != "sync")
+            {
+                ParseCommand(line, words);
+                return;
+            }
 
-
+            Diff toApply = 
         }
 
         public bool GetYes()
@@ -500,7 +534,7 @@ namespace LLVC
                         work + "ed " + CmdLineTool.GetByteDescription(currentSize)
                         + " Bytes of " + CmdLineTool.GetByteDescription(totalSize);
                     string newUpdateLine3 =
-                       "Average speed: " + 
+                       "Average speed: " +
                        CmdLineTool.GetByteDescription((long)(currentSize / time.TotalSeconds)) + " per sec.";
 
                     Console.SetCursorPosition(left, top);
