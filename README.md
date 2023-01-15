@@ -9,6 +9,10 @@ recover a previous state of the library.
 LLVC is intended for large libraries with multiple GigaBytes on data (like usic libraries for example)
 where classical version control systems like Git are unsuitable.
 
+To detect file changes, LLVC uses the LastWritten-date of files.
+If this value changes, LLVC computes the SHA256-value of
+the corresponding file, to check if the file has been altered since the last time LLVC looked at that file.
+
 ## Usage
 
 To start, unpack the release and start LLVC.exe from the command line.
