@@ -1,6 +1,6 @@
 # LargeLibVersionControl
 
-LLVC is a version control software for large libraries (> multiple GigaBytes).
+LLVC is a version control software for large libraries (> multiple GigaBytes), written in C#.
 
 LLVC is very minimalistic in the sense that it only tracks when a file has been changed.
 It does not track how the file has been changed i.e. it does not track file deltas and cannot
