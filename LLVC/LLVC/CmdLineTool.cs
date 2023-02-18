@@ -497,6 +497,29 @@ namespace LLVC
                     + new TimeSpan((long)(past.Ticks * 1.0 * (numberAllItmes - currentItem) / currentItem)));
             Console.WriteLine(new string(' ', 10));
         }
+
+        private void ListFilesEntries(List<FileEntry> entries, string operationName, ConsoleColor operationColor)
+        {
+            if (entries.Count > 0)
+            {
+                Console.WriteLine(operationName + ": " + entries.Count);
+                int i = 0;
+                foreach (var file in entries)
+                {
+                    Console.ForegroundColor = operationColor;
+                    Console.Write(file.RelativePath + ", ");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(file.FileHash);
+                    if (i++ > 99)
+                    {
+                        Console.WriteLine("and more ...");
+                        break;
+                    }
+                }
+                Console.WriteLine();
+            }
+        }
+
         public void ListDiff(Diff diff)
         {
             (var additions, var changes, var deletions) = diff.SortUpdates();
@@ -504,60 +527,9 @@ namespace LLVC
             this.Additions = additions.Count;
             this.Changes = changes.Count;
 
-            if (deletions.Count > 0)
-            {
-                Console.WriteLine("Deletions: " + deletions.Count);
-                int i = 0;
-                foreach (var file in deletions)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(file.RelativePath + ", ");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine(file.FileHash);
-                    if (i++ > 99)
-                    {
-                        Console.WriteLine("and more ...");
-                        break;
-                    }
-                }
-                Console.WriteLine();
-            }
-            if (changes.Count > 0)
-            {
-                Console.WriteLine("Changes: " + changes.Count);
-                int i = 0;
-                foreach (var file in changes)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write(file.RelativePath + ", ");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine(file.FileHash);
-                    if (i++ > 99)
-                    {
-                        Console.WriteLine("and more ...");
-                        break;
-                    }
-                }
-                Console.WriteLine();
-            }
-            if (additions.Count > 0)
-            {
-                Console.WriteLine("Additions: " + additions.Count);
-                int i = 0;
-                foreach (var file in additions)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write(file.RelativePath + ", ");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine(file.FileHash);
-                    if (i++ > 99)
-                    {
-                        Console.WriteLine("and more ...");
-                        break;
-                    }
-                }
-                Console.WriteLine();
-            }
+            ListFilesEntries(deletions, "Deletions", ConsoleColor.Red);
+            ListFilesEntries(changes, "Changes", ConsoleColor.Yellow);
+            ListFilesEntries(additions, "Additions", ConsoleColor.Green);
             Console.WriteLine(deletions.Count + " Deletions, " + changes.Count + " Changes, " + additions.Count + " Additions");
         }
         public static string GetByteDescription(long bytes)
