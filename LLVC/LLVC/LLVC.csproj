@@ -72,6 +72,7 @@
     <Compile Include="ComparisonResult.cs" />
     <Compile Include="Copier.cs" />
     <Compile Include="Diff.cs" />
+    <Compile Include="MediaController.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FileHelper.cs" />
     <Compile Include="FileModLookUp.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="HashValue.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="LibraryController.cs" />
+    <Compile Include="MediaPath.cs" />
     <Compile Include="PreferredHashing.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

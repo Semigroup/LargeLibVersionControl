@@ -12,25 +12,68 @@ namespace LLVC
     {
         public LibraryController Controller { get; set; }
         public HashFunction HashFunction { get; set; } = new HashFunction();
-
-        public MediaDevice Smartphone { get; set; }
+        public MediaController MediaController { get; set; } = new MediaController();
 
         public int Additions { get; set; } = -1;
         public int Changes { get; set; } = -1;
         public int Deletions { get; set; } = -1;
 
-        public void FindPhone()
+        public void ListMediaDevices()
+        {
+            var devices = MediaDevice.GetDevices();
+            if (devices.Count() == 0)
+            {
+                Console.WriteLine("No devices found.");
+                return;
+            }
+            foreach (var item in devices)
+            {
+                string name = item.FriendlyName + ", " + item.Manufacturer;
+                if (item.IsConnected)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write(name);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.Write(": ");
+                    Console.Write(item.Model);
+                    Console.Write(", ");
+                    Console.Write(item.FirmwareVersion);
+                    Console.Write(", ");
+                    Console.Write(item.Protocol);
+                    Console.WriteLine();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(name);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+            }
+        }
+        public MediaDevice GetDevice(string friendlyname)
         {
             var devices = MediaDevice.GetDevices();
             foreach (var item in devices)
-                if (item.FriendlyName.ToLower().Contains("phone"))
-                {
-                    Console.WriteLine("Found phone: " + item.FriendlyName);
-                    Console.WriteLine("Adding phone directories to file system.");
-                    this.Smartphone = item;
-                    return;
-                }
+                if (item.FriendlyName.ToLower().Contains(friendlyname.ToLower()))
+                    return item;
+            return null;
         }
+        public void ConnectMediaDevice(string friendlyname, bool disconnect)
+        {
+            var device = GetDevice(friendlyname);
+            if (device == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Couldnt find device with name '" + friendlyname + "'!");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                return;
+            }
+            if (disconnect)
+                MediaController.DisconnectFromDevice(device);
+            else
+                MediaController.ConnectToDevice(device);
+        }
+
 
         /// <summary>
         /// select [path] : wählt library an adresse aus, falls vorhanden
@@ -74,7 +117,6 @@ namespace LLVC
                 ParseCommand(line, words);
             }
         }
-
         public void WriteStatusString()
         {
             if (Controller == null)
@@ -101,7 +143,6 @@ namespace LLVC
 
             }
         }
-
         public void WritePromptLine(string prompt)
         {
             Console.ForegroundColor = ConsoleColor.White;
@@ -160,6 +201,18 @@ namespace LLVC
         {
             switch (words[0].ToLower())
             {
+                case "disconnect":
+                case "connect":
+                    if (words.Count != 2)
+                        Console.WriteLine("connect needs to be followed by a device name.");
+                    else
+                        ConnectMediaDevice(words[1], words[0].ToLower() == "disconnect");
+                    break;
+
+                case "listdevices":
+                    ListMediaDevices();
+                    break;
+
                 case "help":
                     PrintHelp();
                     break;
@@ -208,6 +261,7 @@ namespace LLVC
 
                 default:
                     Console.WriteLine("Couldnt parse " + line);
+                    Console.WriteLine("Enter 'help' to list commands.");
                     break;
             }
         }

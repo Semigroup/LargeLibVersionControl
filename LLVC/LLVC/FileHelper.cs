@@ -56,7 +56,8 @@ namespace LLVC
                     pathToRoot,
                     (absoluteFilePath, relativeFilePath) =>
                     {
-                        index.FileEntries.Add(relativeFilePath, new FileEntry(pathToRoot, absoluteFilePath, relativeFilePath));
+                        index.FileEntries.Add(relativeFilePath, 
+                            new FileEntry(pathToRoot, absoluteFilePath, relativeFilePath));
                     }
                 );
 
