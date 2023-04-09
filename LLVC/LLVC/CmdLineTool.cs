@@ -591,7 +591,7 @@ namespace LLVC
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             for (int i = sizes.Length - 1; i >= 0; i--)
             {
-                long size = 1l << (i * 10);
+                long size = 1L << (i * 10);
                 if (bytes >= size)
                     return (bytes * 1.0 / size).ToString("G3") + " " + sizes[i];
             }
