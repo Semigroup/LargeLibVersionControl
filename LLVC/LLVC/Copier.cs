@@ -46,12 +46,12 @@ namespace LLVC
                 );
         }
 
-        public static async Task CopyFileAsync(string sourceFile, string destinationFile)
-        {
-            var buffersize = 1 << 20;
-            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, buffersize, FileOptions.Asynchronous | FileOptions.SequentialScan))
-            using (var destinationStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write, FileShare.None, buffersize, FileOptions.Asynchronous | FileOptions.SequentialScan))
-                await sourceStream.CopyToAsync(destinationStream, buffersize);
-        }
+        //public static async Task CopyFileAsync(string sourceFile, string destinationFile)
+        //{
+        //    var buffersize = 1 << 20;
+        //    using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, buffersize, FileOptions.Asynchronous | FileOptions.SequentialScan))
+        //    using (var destinationStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write, FileShare.None, buffersize, FileOptions.Asynchronous | FileOptions.SequentialScan))
+        //        await sourceStream.CopyToAsync(destinationStream, buffersize);
+        //}
     }
 }
